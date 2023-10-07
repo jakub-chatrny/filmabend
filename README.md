@@ -4,6 +4,10 @@
 
 Application for planning movie nights with friends.
 
+- [Roadmap on Trello](https://trello.com/b/CjipW3O3/filmabend)
+- [Figma](https://www.figma.com/file/U7hznEXgHzMwsh3fRT7pVw/Filmabend?type=design&mode=design&t=rH5cV0SeUaBQQOrK-1)
+- [Github](https://github.com/jakub-chatrny/filmabend)
+
 ## Stack
 
 - [Next.js](https://nextjs.org/)
