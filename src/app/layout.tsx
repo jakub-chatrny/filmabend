@@ -26,21 +26,22 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <html lang="en">
             <body className={openSans.className}>
                 <div className="flex min-h-screen flex-col items-center justify-between p-8 gap-8">
-                    <header className="z-10 w-full max-w-7xl items-center justify-between font-mono text-sm flex flex-row ">
-                        <ul className="flex gap-4">
-                            <li>Vše (523)</li>
-                            <li>Společné filmy (123)</li>
-                            <li>Akční Filmy (27)</li>
-                            <li>Horory (5)</li>
-                            <li>Viděno (223)</li>
-                        </ul>
-                        <button>+ Přidat film</button>
-                    </header>
+                    <div className="flex flex-col items-center gap-4 w-full max-w-7xl">
+                        <header className="z-10 w-full items-center justify-between font-mono text-sm flex flex-row ">
+                            <ul className="flex gap-4">
+                                <li>Vše (523)</li>
+                                <li>Společné filmy (123)</li>
+                                <li>Akční Filmy (27)</li>
+                                <li>Horory (5)</li>
+                                <li>Viděno (223)</li>
+                            </ul>
+                            <button>+ Přidat film</button>
+                        </header>
 
-                    <main className="max-w-7xl w-full">
-                        <ErrorBoundary fallback={GlobalError}>{children}</ErrorBoundary>
-                    </main>
-
+                        <main className="max-w-7xl w-full">
+                            <ErrorBoundary fallback={GlobalError}>{children}</ErrorBoundary>
+                        </main>
+                    </div>
                     <footer className="mb-32 grid text-center lg:max-w-7xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
                         <ul className="flex gap-4">
                             <li>

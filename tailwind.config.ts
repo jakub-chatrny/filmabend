@@ -15,6 +15,8 @@ const config: Config = {
                     lighter: "#FF9666",
                     lightest: "#FFDCCC",
                     pale: "#FFF6F6",
+                    25: "#FF4F003F",
+                    50: "#FF4F007F",
                 },
                 gray: {
                     15: "#252528",
