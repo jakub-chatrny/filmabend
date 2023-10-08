@@ -10,6 +10,7 @@ const config: Config = {
             },
             colors: {
                 primary: {
+                    dark: "#CC3F00",
                     DEFAULT: "#FF4F00",
                     light: "#FF7233",
                     lighter: "#FF9666",
