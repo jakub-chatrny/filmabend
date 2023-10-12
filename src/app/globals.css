@@ -17,6 +17,7 @@
 }
 
 body {
+  position: relative;
   color: rgb(var(--foreground-rgb));
   background: linear-gradient(
       to bottom,
@@ -24,4 +25,13 @@ body {
       rgb(var(--background-end-rgb))
     )
     rgb(var(--background-start-rgb));
+  &:before {
+    content: "";
+    position: absolute;
+    right: 0;
+    width: 1062px;
+    height: 100%;
+    background-image: url("/public/filmabend-bg-transformed.png");
+
+  }
 }

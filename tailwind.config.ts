@@ -31,6 +31,10 @@ const config: Config = {
                 },
             },
         },
+        fontFamily: {
+            display: "var(--font-cinzel)",
+            body: "var(--font-open-sans)",
+        },
     },
     plugins: [],
 };

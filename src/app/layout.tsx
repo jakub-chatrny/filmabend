@@ -1,12 +1,13 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { Open_Sans } from "next/font/google";
+import { Cinzel, Open_Sans } from "next/font/google";
 import { TMDB_BASE_URL, TMDB_REQUEST_OPTIONS } from "@filmabend/utils/tmdb";
 import { ErrorBoundary, Link } from "@filmabend/components";
 import GlobalError from "./global-error";
-import { UserMenu } from "./UserMenu";
+import User from "./user/page";
 
-const openSans = Open_Sans({ subsets: ["latin"] });
+const openSans = Open_Sans({ subsets: ["latin"], variable: "--font-open-sans" });
+const cinzel = Cinzel({ subsets: ["latin-ext"], variable: "--font-cinzel" });
 
 export const metadata: Metadata = {
     title: "Filmabend",
@@ -28,18 +29,18 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     await tmdbAuth();
     return (
         <html lang="en">
-            <body className={openSans.className}>
+            <body className={`${cinzel.variable} ${openSans.className} ${openSans.variable}`}>
                 <div className="flex min-h-screen flex-col items-center justify-between p-8 gap-8">
                     <div className="flex flex-col items-center gap-4 w-full max-w-7xl">
                         <header className="z-10 w-full items-center justify-between font-mono text-sm flex flex-row ">
-                            <ul className="flex gap-4">
+                            <ul className="flex gap-4 text-lg">
                                 <li>Vše (523)</li>
                                 <li>Společné filmy (123)</li>
                                 <li>Akční Filmy (27)</li>
                                 <li>Horory (5)</li>
                                 <li>Viděno (223)</li>
                             </ul>
-                            <UserMenu />
+                            <User />
                             {/*<Button onClick={null}>+ Přidat film</Button>*/}
                         </header>
 
