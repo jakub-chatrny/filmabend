@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { UserMenu } from "@filmabend/app/user/UserMenu";
+import { Login } from "@filmabend/app/user/Login";
 
 const UserPage = async () => {
     const cookieStore = cookies();
@@ -13,7 +13,7 @@ const UserPage = async () => {
 
     return (
         <>
-            <UserMenu user={user} redirectTo={process.env.NEXT_PUBLIC_LOCALHOST_AUTH_REDIRECT_URL} />
+            <Login user={user} redirectTo={process.env.NEXT_PUBLIC_LOCALHOST_AUTH_REDIRECT_URL} />
         </>
     );
 };

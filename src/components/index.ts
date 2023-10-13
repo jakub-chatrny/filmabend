@@ -5,3 +5,4 @@ export * from "./ErrorBoundary";
 export * from "./Headline";
 export * from "./TextInput";
 export * from "./Button";
+export * from "./UserMenu";

@@ -4,13 +4,14 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { FC, useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import Loading from "@filmabend/app/user/loading";
+import { UserMenu } from "@filmabend/components";
 
 type UserMenuProps = {
     user?: User | null;
     redirectTo?: string;
 };
 
-export const UserMenu: FC<UserMenuProps> = ({ user, redirectTo }) => {
+export const Login: FC<UserMenuProps> = ({ user, redirectTo }) => {
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
     const supabase = createClientComponentClient();
@@ -56,22 +57,13 @@ export const UserMenu: FC<UserMenuProps> = ({ user, redirectTo }) => {
             {isLoading ? (
                 <Loading />
             ) : user ? (
-                <div className="flex gap-5">
-                    <div
-                        className="flex border-2 border-primary-pale rounded-full p-1.5 pr-2 gap-2.5 justify-center items-center text-lg"
-                        key={user.id}
-                    >
-                        <img className="rounded-full h-9" src={userAvatarUrl} alt="avatar" />
-
-                        <span>{userName}</span>
-                        <img className="h-6" src="/chevron-right.svg" alt="expand" />
-                    </div>
-                    <button className="text-lg" onClick={handleSignOut}>
-                        Odhlásit
-                    </button>
-                </div>
+                <UserMenu userAvatarUrl={userAvatarUrl} userName={userName} handleSignOut={handleSignOut} />
             ) : (
-                <button className="text-lg h-[52px]" onClick={handleSignIn}>
+                <button
+                    className="text-lg h-[52px] min-w-[143px] border-2 border-primary-pale p-1.5 px-7 rounded-full justify-center items-center text-lg bg-black bg-opacity-80"
+                    onClick={handleSignIn}
+                >
+                    {" "}
                     Přihlásit
                 </button>
             )}
