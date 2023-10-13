@@ -27,11 +27,14 @@ body {
     rgb(var(--background-start-rgb));
   &:before {
     content: "";
-    position: absolute;
+    position: fixed;
     right: 0;
-    width: 1062px;
-    height: 100%;
-    background-image: url("/public/filmabend-bg-transformed.png");
-
+    width: 700px;
+    height: 100vh;
+    background-image: url("/filmabend-bg-transformed.png");
+    background-size:  auto 100%;
+    background-repeat: no-repeat;
+    background-position: top right;
+    box-shadow: 100px 0px 82px 0px #0C0C0D inset;
   }
 }

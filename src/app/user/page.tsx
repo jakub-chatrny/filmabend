@@ -7,18 +7,13 @@ const UserPage = async () => {
     const supabase = createServerComponentClient({ cookies: () => cookieStore });
 
     const {
-        data: { session },
-        error: sessionError,
-    } = await supabase.auth.getSession();
-
-    const {
         data: { user },
         error: getUserError,
-    } = await supabase.auth.getUser(session?.access_token);
+    } = await supabase.auth.getUser();
 
     return (
         <>
-            <UserMenu user={user} />
+            <UserMenu user={user} redirectTo={process.env.NEXT_PUBLIC_LOCALHOST_AUTH_REDIRECT_URL} />
         </>
     );
 };
