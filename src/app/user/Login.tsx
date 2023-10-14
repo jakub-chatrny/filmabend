@@ -22,7 +22,7 @@ type UserMenuProps = {
  */
 const useIsAuthenticating = (supabase: SupabaseClient<Database>, user: User | null | undefined) => {
     const router = useRouter();
-    const [isAuthenticating, setIsAuthenticating] = useState<boolean>(Boolean(getLocalStorageItem("isAuthenticating")));
+    const [isAuthenticating, setIsAuthenticating] = useState<boolean>(getLocalStorageItem("isAuthenticating") === "true");
 
     useEffect(() => {
         const isExpired =
@@ -68,7 +68,8 @@ const useIsAuthenticating = (supabase: SupabaseClient<Database>, user: User | nu
     );
 
     return {
-        isAuthenticating,
+        // always use isAuthenticating when is SSR and user is not defined
+        isAuthenticating: (typeof window === "undefined" && !user) || isAuthenticating,
         setIsAuthenticating: updateAuthentication,
     };
 };
