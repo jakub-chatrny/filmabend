@@ -11,7 +11,14 @@ export const Tile = ({ title, releaseDate, posterUrl }: TileProps) => {
     return (
         <div className="group flex flex-col rounded-2xl overflow-hidden relative h-[320px] w-full min-w-[187px] bg-gray-15 drop-shadow border-2 border-black hover:border-primary hover:cursor-pointer">
             {posterUrl && (
-                <Image src={`https://image.tmdb.org/t/p/w300${posterUrl}`} alt={title} style={{ width: "auto" }} width={300} height={240} />
+                <Image
+                    src={`https://image.tmdb.org/t/p/w300${posterUrl}`}
+                    alt={title}
+                    style={{ width: "auto" }}
+                    width={300}
+                    height={240}
+                    priority={false}
+                />
             )}
             <div className="absolute flex flex-col h-full w-full">
                 <div className="flex flex-auto flex-row-reverse p-2 group-hover:bg-primary-25">
