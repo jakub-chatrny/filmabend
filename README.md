@@ -1,52 +1,48 @@
 # Filmabend
 
-## About
+Private app for picking a movie for movie night with friends: collect movies into categories, pick 2–8 candidates together (live, from each person's own device) and let the dice decide.
 
-Application for planning movie nights with friends.
-
-- [Roadmap on Trello](https://trello.com/b/CjipW3O3/filmabend)
-- [Figma](https://www.figma.com/file/U7hznEXgHzMwsh3fRT7pVw/Filmabend?type=design&mode=design&t=rH5cV0SeUaBQQOrK-1)
-- [Github](https://github.com/jakub-chatrny/filmabend)
+- [Figma](https://www.figma.com/design/U7hznEXgHzMwsh3fRT7pVw/Filmabend)
+- [Trello (old roadmap)](https://trello.com/b/CjipW3O3/filmabend)
 
 ## Stack
 
-- [Next.js](https://nextjs.org/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [TypeScript](https://www.typescriptlang.org/)
-- [ESLint](https://eslint.org/)
-- [Prettier](https://prettier.io/)
+- [Next.js](https://nextjs.org/) (App Router) + React + TypeScript
+- [Tailwind CSS](https://tailwindcss.com/) v4 — design tokens live in `src/app/globals.css` (`@theme`)
+- [Supabase](https://supabase.com/) — Postgres, Google login, Realtime; schema in `supabase/migrations`
+- [TMDB API](https://developer.themoviedb.org/) — movie search and details
+- Hosted on [Vercel](https://vercel.com/)
 
-## Getting Started
-
-First, run the development server:
+## Getting started
 
 ```bash
+npm install
+cp .env.example .env.local   # then fill in the values
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Database
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+There is no local Supabase stack (it needs Docker); migrations are applied to the hosted project.
 
-## Learn More
+```bash
+npx supabase login
+npx supabase link --project-ref <project-ref>
+npm run db:push    # apply supabase/migrations to the linked project
+npm run db:types   # regenerate src/lib/database.types.ts
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Scripts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Script                            | What it does               |
+| --------------------------------- | -------------------------- |
+| `npm run dev`                     | Dev server                 |
+| `npm run build`                   | Production build           |
+| `npm run lint`                    | ESLint                     |
+| `npm run typecheck`               | TypeScript check           |
+| `npm run format` / `format:check` | Prettier                   |
+| `npm run db:push` / `db:types`    | Supabase migrations, types |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+Dependency versions are pinned exactly (`.npmrc`), and Dependabot opens weekly update PRs.

@@ -1,0 +1,15 @@
+version: 2
+updates:
+    - package-ecosystem: npm
+      directory: /
+      schedule:
+          interval: weekly
+      groups:
+          next-react:
+              patterns: ["next", "eslint-config-next", "react", "react-dom", "@types/react", "@types/react-dom"]
+          supabase:
+              patterns: ["@supabase/*", "supabase"]
+          tooling:
+              patterns: ["*"]
+              exclude-patterns:
+                  ["next", "eslint-config-next", "react", "react-dom", "@types/react", "@types/react-dom", "@supabase/*", "supabase"]

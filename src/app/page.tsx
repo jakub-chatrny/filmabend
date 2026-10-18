@@ -1,11 +1,8 @@
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
-import Search from "./search/page";
-
-export default async function Home() {
+export default function Home() {
     return (
-        <div className="relative flex place-items-center">
-            <Search />
-        </div>
+        <main className="flex flex-col gap-4">
+            <h1 className="font-display text-4xl font-bold uppercase">Filmabend</h1>
+            <p className="max-w-prose text-primary-lightest">Výběr filmu na filmový večer. Knihovna filmů a losování přijdou brzy.</p>
+        </main>
     );
 }
