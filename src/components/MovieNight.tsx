@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { createContext, use, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createContext, use, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { getClient } from "@/lib/supabase/client";
 
 export const MIN_PICK = 2;
@@ -25,14 +25,20 @@ type MovieNightState = {
     ids: number[];
 };
 
-type MovieNight = MovieNightState & {
+type StoreState = MovieNightState & {
+    busy: boolean;
+    error: string | null;
+};
+
+type MovieNight = StoreState & {
     isOpen: boolean;
     /** Candidates can be changed until someone rolls */
     canEdit: boolean;
     isSelected: (movieId: number) => boolean;
     isFull: boolean;
-    busy: boolean;
-    error: string | null;
+} & Actions;
+
+type Actions = {
     dismissError: () => void;
     toggle: (movieId: number) => void;
     clear: () => Promise<void>;
@@ -41,9 +47,38 @@ type MovieNight = MovieNightState & {
     finish: () => Promise<void>;
 };
 
-const MovieNightContext = createContext<MovieNight | null>(null);
-
 const OPEN_STATUSES: NightStatus[] = ["selecting", "rolled"];
+
+/** What the server renders: nothing loaded yet. Hydration uses this too, so server and client HTML match. */
+const SERVER_STATE: StoreState = { loaded: false, night: null, ids: [], busy: false, error: null };
+const getServerState = () => SERVER_STATE;
+
+/**
+ * A tiny external store read with useSyncExternalStore. The provider sits in the layout and
+ * loads before the page streams in; with plain React state, the page would hydrate with
+ * already-loaded data that the server never rendered.
+ */
+function createStore() {
+    let state = SERVER_STATE;
+    const listeners = new Set<() => void>();
+    return {
+        get: () => state,
+        update(patch: Partial<StoreState> | ((current: StoreState) => Partial<StoreState>)) {
+            state = { ...state, ...(typeof patch === "function" ? patch(state) : patch) };
+            listeners.forEach((listener) => listener());
+        },
+        subscribe(listener: () => void) {
+            listeners.add(listener);
+            return () => void listeners.delete(listener);
+        },
+    };
+}
+
+type Store = ReturnType<typeof createStore>;
+
+const MovieNightContext = createContext<{ store: Store; actions: Actions } | null>(null);
+
+const rollKey = (state: StoreState) => (state.night ? `${state.night.id}:${state.night.rollCount}` : "");
 
 /**
  * The shared movie night. Candidates live in the database; every device listens to
@@ -52,9 +87,7 @@ const OPEN_STATUSES: NightStatus[] = ["selecting", "rolled"];
 export function MovieNightProvider({ children }: { children: ReactNode }) {
     const router = useRouter();
     const pathname = usePathname();
-    const [state, setState] = useState<MovieNightState>({ loaded: false, night: null, ids: [] });
-    const [busy, setBusy] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [store] = useState(createStore);
 
     const refresh = useCallback(async () => {
         const { data, error } = await getClient()
@@ -64,7 +97,7 @@ export function MovieNightProvider({ children }: { children: ReactNode }) {
             .limit(1)
             .maybeSingle();
         if (error) {
-            setError("Nepodařilo se načíst výběr.");
+            store.update({ error: "Nepodařilo se načíst výběr." });
             return;
         }
 
@@ -79,8 +112,8 @@ export function MovieNightProvider({ children }: { children: ReactNode }) {
             data && night && OPEN_STATUSES.includes(night.status)
                 ? data.pick_candidates.toSorted((a, b) => a.added_at.localeCompare(b.added_at)).map((c) => c.movie_id)
                 : [];
-        setState({ loaded: true, night, ids });
-    }, []);
+        store.update({ loaded: true, night, ids });
+    }, [store]);
 
     useEffect(() => {
         const supabase = getClient();
@@ -111,59 +144,52 @@ export function MovieNightProvider({ children }: { children: ReactNode }) {
     }, [refresh, router]);
 
     // When someone else rolls, take everyone to the result (but not on the first load)
-    const lastRoll = useRef<string | null>(null);
+    const onPickPage = useRef(false);
     useEffect(() => {
-        if (!state.loaded) return;
-        const roll = state.night ? `${state.night.id}:${state.night.rollCount}` : "";
-        if (state.night?.status === "rolled" && lastRoll.current !== null && roll !== lastRoll.current && pathname !== "/pick") {
-            router.push("/pick");
-        }
-        lastRoll.current = roll;
-    }, [state, pathname, router]);
+        onPickPage.current = pathname === "/pick";
+    }, [pathname]);
+    useEffect(() => {
+        let lastRoll = store.get().loaded ? rollKey(store.get()) : null;
+        return store.subscribe(() => {
+            const state = store.get();
+            if (!state.loaded) return;
+            const roll = rollKey(state);
+            if (state.night?.status === "rolled" && lastRoll !== null && roll !== lastRoll && !onPickPage.current) {
+                router.push("/pick");
+            }
+            lastRoll = roll;
+        });
+    }, [store, router]);
 
-    const call = useCallback(
-        async (fn: "clear_candidates" | "roll_pick" | "back_to_selection" | "finish_pick") => {
-            setBusy(true);
-            setError(null);
+    const actions = useMemo<Actions>(() => {
+        const call = async (fn: "clear_candidates" | "roll_pick" | "back_to_selection" | "finish_pick") => {
+            store.update({ busy: true, error: null });
             const { error } = await getClient().rpc(fn);
-            if (error) setError(error.message);
+            if (error) store.update({ error: error.message });
             await refresh();
-            setBusy(false);
+            store.update({ busy: false });
             return !error;
-        },
-        [refresh],
-    );
+        };
 
-    const toggle = useCallback(
-        (movieId: number) => {
-            setError(null);
-            // Optimistic so taps feel instant; the database has the final say
-            setState((current) => {
-                if (current.ids.includes(movieId)) return { ...current, ids: current.ids.filter((id) => id !== movieId) };
-                return current.ids.length < MAX_PICK ? { ...current, ids: [...current.ids, movieId] } : current;
-            });
-            void getClient()
-                .rpc("toggle_candidate", { p_movie_id: movieId })
-                .then(({ error }) => {
-                    if (error) setError(error.message);
-                    void refresh();
-                });
-        },
-        [refresh],
-    );
-
-    const value = useMemo<MovieNight>(() => {
-        const isOpen = !!state.night && OPEN_STATUSES.includes(state.night.status);
         return {
-            ...state,
-            isOpen,
-            canEdit: state.loaded && state.night?.status !== "rolled",
-            isSelected: (movieId) => state.ids.includes(movieId),
-            isFull: state.ids.length >= MAX_PICK,
-            busy,
-            error,
-            dismissError: () => setError(null),
-            toggle,
+            dismissError: () => store.update({ error: null }),
+            toggle: (movieId) => {
+                // Optimistic so taps feel instant; the database has the final say
+                store.update((current) => ({
+                    error: null,
+                    ids: current.ids.includes(movieId)
+                        ? current.ids.filter((id) => id !== movieId)
+                        : current.ids.length < MAX_PICK
+                          ? [...current.ids, movieId]
+                          : current.ids,
+                }));
+                void getClient()
+                    .rpc("toggle_candidate", { p_movie_id: movieId })
+                    .then(({ error }) => {
+                        if (error) store.update({ error: error.message });
+                        void refresh();
+                    });
+            },
             clear: async () => void (await call("clear_candidates")),
             roll: async () => {
                 if (await call("roll_pick")) router.push("/pick");
@@ -171,13 +197,26 @@ export function MovieNightProvider({ children }: { children: ReactNode }) {
             backToSelection: async () => void (await call("back_to_selection")),
             finish: async () => void (await call("finish_pick")),
         };
-    }, [state, busy, error, toggle, call, router]);
+    }, [store, refresh, router]);
 
+    const value = useMemo(() => ({ store, actions }), [store, actions]);
     return <MovieNightContext value={value}>{children}</MovieNightContext>;
 }
 
-export function useMovieNight() {
-    const night = use(MovieNightContext);
-    if (!night) throw new Error("useMovieNight must be used within a MovieNightProvider");
-    return night;
+export function useMovieNight(): MovieNight {
+    const context = use(MovieNightContext);
+    if (!context) throw new Error("useMovieNight must be used within a MovieNightProvider");
+    const state = useSyncExternalStore(context.store.subscribe, context.store.get, getServerState);
+
+    return useMemo(
+        () => ({
+            ...state,
+            ...context.actions,
+            isOpen: !!state.night && OPEN_STATUSES.includes(state.night.status),
+            canEdit: state.loaded && state.night?.status !== "rolled",
+            isSelected: (movieId: number) => state.ids.includes(movieId),
+            isFull: state.ids.length >= MAX_PICK,
+        }),
+        [state, context.actions],
+    );
 }
