@@ -1,42 +1,66 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+/* Design tokens from Figma (file U7hznEXgHzMwsh3fRT7pVw) */
+@theme {
+    --color-primary-dark: #cc3f00;
+    --color-primary: #ff4f00;
+    --color-primary-light: #ff7233;
+    --color-primary-lighter: #ff9666;
+    --color-primary-lightest: #ffdccc;
+    --color-primary-pale: #fff6f6;
+
+    --color-gray-4: #ced4da;
+    --color-gray-5: #adb5bd;
+    --color-gray-15: #252528;
+    --color-gray-40: #62626a;
+    --color-placeholder: #6e6e77;
+    --color-black: #0c0c0d;
+    --color-danger: #f03e3e;
+
+    --font-display: var(--font-cinzel);
+    --font-sans: var(--font-open-sans);
+
+    --shadow-card: 0 0 20px rgb(0 0 0 / 0.25);
+
+    --animate-roll: roll 0.6s linear infinite;
+    @keyframes roll {
+        to {
+            transform: rotate(360deg);
+        }
+    }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 246, 246;
-    --background-start-rgb: 12, 12, 13;
-    --background-end-rgb: 12, 12, 13;
-  }
+/* The app is dark-only, matching the design */
+:root {
+    color-scheme: dark;
 }
 
 body {
-  position: relative;
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
-
+    position: relative;
+    min-height: 100dvh;
+    background-color: var(--color-black);
+    color: var(--color-primary-pale);
 }
 
-body:before {
-  content: "";
-  position: fixed;
-  right: 0;
-  width: 700px;
-  height: 100vh;
-  background-image: url("/filmabend-bg-transformed.png");
-  background-size:  auto 100%;
-  background-repeat: no-repeat;
-  background-position: top right;
-  box-shadow: 100px 0px 82px 0px #0C0C0D inset;
+/* Cinema background on the right edge, faded into the page */
+body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: -1;
+    height: 100dvh;
+    aspect-ratio: 1062 / 1880;
+    max-width: 100vw;
+    background-image: url("/filmabend-bg.webp");
+    background-size: cover;
+    background-position: top right;
+    mask-image: linear-gradient(to right, transparent, black 35%);
+    opacity: 0.35;
+}
+
+@media (min-width: 1024px) {
+    body::before {
+        opacity: 0.5;
+    }
 }
