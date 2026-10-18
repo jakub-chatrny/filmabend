@@ -34,6 +34,16 @@ npm run db:push    # apply supabase/migrations to the linked project
 npm run db:types   # regenerate src/lib/database.types.ts
 ```
 
+### Who can sign in
+
+Login is Google only, and only emails in `public.allowed_emails` get in. The list is kept out of the repo; add people in the Supabase SQL editor:
+
+```sql
+insert into public.allowed_emails (email) values ('someone@gmail.com');
+```
+
+Optionally enable the **Before User Created** hook (Authentication → Hooks → Postgres function `public.hook_before_user_created`) so accounts that aren't on the list are rejected before Supabase creates them.
+
 ## Scripts
 
 | Script                            | What it does               |

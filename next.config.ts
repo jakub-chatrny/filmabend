@@ -4,8 +4,12 @@ const nextConfig: NextConfig = {
     cacheComponents: true,
     partialPrefetching: true,
     images: {
-        // TMDB posters
-        remotePatterns: [new URL("https://image.tmdb.org/t/p/**")],
+        remotePatterns: [
+            // TMDB posters
+            new URL("https://image.tmdb.org/t/p/**"),
+            // Google avatars
+            new URL("https://lh3.googleusercontent.com/**"),
+        ],
     },
     turbopack: {
         rules: {
