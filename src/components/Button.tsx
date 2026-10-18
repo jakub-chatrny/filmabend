@@ -3,8 +3,8 @@ import type { ComponentProps } from "react";
 const VARIANTS = {
     primary:
         "border border-primary bg-primary text-primary-pale hover:bg-primary-dark disabled:border-primary-lighter disabled:bg-primary-lighter disabled:text-primary-lightest",
-    secondary: "bg-gray-15 text-white hover:bg-gray-40 disabled:opacity-50",
-    outline: "border-2 border-primary text-primary hover:bg-primary/10 disabled:opacity-50",
+    secondary: "border border-gray-15 bg-gray-15 text-white hover:border-gray-40 hover:bg-gray-40 disabled:opacity-50",
+    outline: "border border-primary text-primary hover:bg-primary/10 disabled:opacity-50",
 } as const;
 
 const SIZES = {

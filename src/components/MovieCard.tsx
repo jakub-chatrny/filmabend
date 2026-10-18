@@ -18,12 +18,14 @@ type MovieCardProps = {
     /** Search results show the year next to the title to tell remakes apart */
     yearInTitle?: boolean;
     badge?: string;
+    /** Hover shows the selection ring; off for movies that can't be picked */
+    selectable?: boolean;
 };
 
 const CARD_SIZES = "(min-width: 640px) 187px, 50vw";
 
 /** "Cardtall" from Figma */
-export function MovieCard({ movie, selected = false, yearInTitle = false, badge }: MovieCardProps) {
+export function MovieCard({ movie, selected = false, yearInTitle = false, badge, selectable = true }: MovieCardProps) {
     const runtime = formatRuntime(movie.runtimeMinutes);
     const rating = movie.rating && `★ ${movie.rating}`;
     const details = [runtime, !yearInTitle && movie.releaseYear, rating].filter(Boolean).join(" | ");
@@ -32,7 +34,7 @@ export function MovieCard({ movie, selected = false, yearInTitle = false, badge 
     return (
         <div
             className={`group relative flex aspect-187/266 w-full flex-col overflow-hidden rounded-[15px] border-2 bg-gray-15 shadow-card transition-colors ${
-                selected ? "border-primary" : "border-transparent hover:border-primary"
+                selected ? "border-primary" : selectable ? "border-transparent hover:border-primary" : "border-transparent"
             }`}
         >
             <div className="relative flex-1 bg-linear-to-b from-gray-15 via-gray-15/75 to-gray-15/50">
@@ -48,13 +50,21 @@ export function MovieCard({ movie, selected = false, yearInTitle = false, badge 
                     {selected ? (
                         <Image src="/icons/check-circle.svg" alt="Vybráno" width={26} height={26} className="-m-px max-w-none" />
                     ) : (
-                        <span className="hidden size-6 rounded-full border-2 border-primary group-hover:block" />
+                        selectable && (
+                            <Image
+                                src="/icons/select-ring.svg"
+                                alt=""
+                                width={26}
+                                height={26}
+                                className="-m-px hidden max-w-none group-hover:block"
+                            />
+                        )
                     )}
                 </div>
             </div>
             <div
                 className={`flex min-h-28 flex-col justify-between gap-2 px-4 py-2.5 text-black sm:px-5 ${
-                    selected ? "bg-primary-lightest" : "bg-primary-pale group-hover:bg-primary-lightest"
+                    selected ? "bg-primary-lightest" : selectable ? "bg-primary-pale group-hover:bg-primary-lightest" : "bg-primary-pale"
                 }`}
             >
                 <h3 className="line-clamp-2 text-base leading-tight font-bold sm:text-xl">
