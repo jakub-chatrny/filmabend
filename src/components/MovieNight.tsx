@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, use, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { getClient } from "@/lib/supabase/client";
 
 export const MIN_PICK = 2;
 export const MAX_PICK = 8;
@@ -50,7 +50,6 @@ const OPEN_STATUSES: NightStatus[] = ["selecting", "rolled"];
  * Supabase Realtime and re-reads the state, so all three of you see the same picks and roll.
  */
 export function MovieNightProvider({ children }: { children: ReactNode }) {
-    const supabase = useMemo(() => createClient(), []);
     const router = useRouter();
     const pathname = usePathname();
     const [state, setState] = useState<MovieNightState>({ loaded: false, night: null, ids: [] });
@@ -58,7 +57,7 @@ export function MovieNightProvider({ children }: { children: ReactNode }) {
     const [error, setError] = useState<string | null>(null);
 
     const refresh = useCallback(async () => {
-        const { data, error } = await supabase
+        const { data, error } = await getClient()
             .from("pick_sessions")
             .select("id, status, winner_movie_id, roll_count, rolled_at, pick_candidates(movie_id, added_at)")
             .order("id", { ascending: false })
@@ -81,11 +80,15 @@ export function MovieNightProvider({ children }: { children: ReactNode }) {
                 ? data.pick_candidates.toSorted((a, b) => a.added_at.localeCompare(b.added_at)).map((c) => c.movie_id)
                 : [];
         setState({ loaded: true, night, ids });
-    }, [supabase]);
+    }, []);
 
     useEffect(() => {
+        const supabase = getClient();
+        // Load right away instead of waiting for the subscription
+        const initialLoad = setTimeout(() => void refresh(), 0);
+        // Unique name: the client is shared, and a channel that's still closing can't be reused
         const channel = supabase
-            .channel("movie-night")
+            .channel(`movie-night-${crypto.randomUUID()}`)
             .on("postgres_changes", { event: "*", schema: "public", table: "pick_sessions" }, () => void refresh())
             .on("postgres_changes", { event: "*", schema: "public", table: "pick_candidates" }, () => void refresh())
             // New or seen movies change the library and the tab counts
@@ -101,10 +104,11 @@ export function MovieNightProvider({ children }: { children: ReactNode }) {
         document.addEventListener("visibilitychange", onVisible);
 
         return () => {
+            clearTimeout(initialLoad);
             document.removeEventListener("visibilitychange", onVisible);
             void supabase.removeChannel(channel);
         };
-    }, [supabase, refresh, router]);
+    }, [refresh, router]);
 
     // When someone else rolls, take everyone to the result (but not on the first load)
     const lastRoll = useRef<string | null>(null);
@@ -121,13 +125,13 @@ export function MovieNightProvider({ children }: { children: ReactNode }) {
         async (fn: "clear_candidates" | "roll_pick" | "back_to_selection" | "finish_pick") => {
             setBusy(true);
             setError(null);
-            const { error } = await supabase.rpc(fn);
+            const { error } = await getClient().rpc(fn);
             if (error) setError(error.message);
             await refresh();
             setBusy(false);
             return !error;
         },
-        [supabase, refresh],
+        [refresh],
     );
 
     const toggle = useCallback(
@@ -138,12 +142,14 @@ export function MovieNightProvider({ children }: { children: ReactNode }) {
                 if (current.ids.includes(movieId)) return { ...current, ids: current.ids.filter((id) => id !== movieId) };
                 return current.ids.length < MAX_PICK ? { ...current, ids: [...current.ids, movieId] } : current;
             });
-            void supabase.rpc("toggle_candidate", { p_movie_id: movieId }).then(({ error }) => {
-                if (error) setError(error.message);
-                void refresh();
-            });
+            void getClient()
+                .rpc("toggle_candidate", { p_movie_id: movieId })
+                .then(({ error }) => {
+                    if (error) setError(error.message);
+                    void refresh();
+                });
         },
-        [supabase, refresh],
+        [refresh],
     );
 
     const value = useMemo<MovieNight>(() => {
