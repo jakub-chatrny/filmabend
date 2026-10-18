@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
@@ -13,5 +14,6 @@ export async function unmarkSeen(movieId: number): Promise<{ error?: string }> {
         console.error(error);
         return { error: "Film se nepodařilo vrátit." };
     }
+    revalidatePath("/", "layout");
     return {};
 }

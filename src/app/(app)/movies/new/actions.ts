@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -47,5 +48,7 @@ export async function addMovie(_previous: AddMovieState, formData: FormData): Pr
         return { error: "Film se nepodařilo uložit." };
     }
 
+    // The header counts live in the shared layout, which a plain redirect would keep as it was
+    revalidatePath("/", "layout");
     redirect("/");
 }

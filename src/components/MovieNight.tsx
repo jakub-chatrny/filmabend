@@ -117,6 +117,7 @@ export function MovieNightProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         const supabase = getClient();
+        let subscribedBefore = false;
         // Load right away instead of waiting for the subscription
         const initialLoad = setTimeout(() => void refresh(), 0);
         // Unique name: the client is shared, and a channel that's still closing can't be reused
@@ -127,12 +128,18 @@ export function MovieNightProvider({ children }: { children: ReactNode }) {
             // New or seen movies change the library and the tab counts
             .on("postgres_changes", { event: "*", schema: "public", table: "movies" }, () => router.refresh())
             .subscribe((status) => {
-                if (status === "SUBSCRIBED") void refresh();
+                if (status !== "SUBSCRIBED") return;
+                void refresh();
+                // After a reconnect we may have missed movie changes too (counts, seen)
+                if (subscribedBefore) router.refresh();
+                subscribedBefore = true;
             });
 
         // Phones drop the socket while asleep; catch up when the app comes back
         const onVisible = () => {
-            if (document.visibilityState === "visible") void refresh();
+            if (document.visibilityState !== "visible") return;
+            void refresh();
+            router.refresh();
         };
         document.addEventListener("visibilitychange", onVisible);
 
@@ -195,7 +202,10 @@ export function MovieNightProvider({ children }: { children: ReactNode }) {
                 if (await call("roll_pick")) router.push("/pick");
             },
             backToSelection: async () => void (await call("back_to_selection")),
-            finish: async () => void (await call("finish_pick")),
+            finish: async () => {
+                // Don't wait for Realtime to update the tab counts on this device
+                if (await call("finish_pick")) router.refresh();
+            },
         };
     }, [store, refresh, router]);
 
