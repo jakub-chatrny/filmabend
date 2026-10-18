@@ -9,14 +9,17 @@
     --color-primary-lightest: #ffdccc;
     --color-primary-pale: #fff6f6;
 
+    --color-gray-4: #ced4da;
     --color-gray-15: #252528;
     --color-gray-40: #62626a;
+    --color-placeholder: #6e6e77;
     --color-black: #0c0c0d;
+    --color-danger: #f03e3e;
 
     --font-display: var(--font-cinzel);
     --font-sans: var(--font-open-sans);
 
-    --drop-shadow-card: 0 0 20px rgb(0 0 0 / 0.25);
+    --shadow-card: 0 0 20px rgb(0 0 0 / 0.25);
 }
 
 /* The app is dark-only, matching the design */
@@ -50,6 +53,6 @@ body::before {
 
 @media (min-width: 1024px) {
     body::before {
-        opacity: 1;
+        opacity: 0.5;
     }
 }

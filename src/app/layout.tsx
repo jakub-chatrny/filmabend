@@ -19,7 +19,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     return (
         <html lang="cs" className={`${openSans.variable} ${cinzel.variable} antialiased`}>
             <body className="font-sans">
-                <div className="mx-auto flex min-h-dvh w-full max-w-7xl flex-col gap-8 px-4 py-6 sm:px-8">{children}</div>
+                <div className="mx-auto flex min-h-dvh w-full max-w-200 flex-col gap-10 px-4 pt-3.5 pb-6">{children}</div>
             </body>
         </html>
     );

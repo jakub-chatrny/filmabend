@@ -37,19 +37,23 @@ export function UserMenu({ name, avatarUrl }: UserMenuProps) {
                 aria-expanded={open}
                 aria-haspopup="menu"
                 onClick={() => setOpen((value) => !value)}
-                className="flex h-10 items-center gap-2 rounded-full border-2 border-primary-pale bg-black/80 py-1 pr-2 pl-1 transition-colors hover:border-primary"
+                className="flex items-center gap-[5px] rounded-[20px] border-2 border-primary-pale bg-black/20 p-[5px] text-sm font-semibold transition-colors hover:border-primary"
             >
                 {avatarUrl ? (
-                    <Image src={avatarUrl} alt="" width={28} height={28} className="rounded-full" />
+                    <Image src={avatarUrl} alt="" width={23} height={23} className="rounded-full" />
                 ) : (
-                    <span className="flex size-7 items-center justify-center rounded-full bg-primary text-sm font-bold">
+                    <span className="flex size-[23px] items-center justify-center rounded-full bg-primary text-xs font-bold">
                         {firstName[0]}
                     </span>
                 )}
                 <span>{firstName}</span>
-                <svg viewBox="0 0 24 24" aria-hidden className={`size-5 transition-transform ${open ? "-rotate-90" : "rotate-90"}`}>
-                    <path fill="currentColor" d="M12.6 12 8 7.4 9.4 6l6 6-6 6L8 16.6z" />
-                </svg>
+                <Image
+                    src="/icons/chevron-right.svg"
+                    alt=""
+                    width={18}
+                    height={18}
+                    className={`transition-transform ${open ? "-rotate-90" : "rotate-90"}`}
+                />
             </button>
             {open && (
                 <div
@@ -72,5 +76,5 @@ export function UserMenu({ name, avatarUrl }: UserMenuProps) {
 }
 
 export function UserMenuSkeleton() {
-    return <div className="h-10 w-28 animate-pulse rounded-full bg-gray-15" />;
+    return <div className="h-[37px] w-24 animate-pulse rounded-[20px] bg-gray-15" />;
 }

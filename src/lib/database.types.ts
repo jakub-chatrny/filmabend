@@ -54,6 +54,90 @@ export type Database = {
         }
         Relationships: []
       }
+      categories: {
+        Row: {
+          id: string
+          label: string
+          position: number
+        }
+        Insert: {
+          id: string
+          label: string
+          position: number
+        }
+        Update: {
+          id?: string
+          label?: string
+          position?: number
+        }
+        Relationships: []
+      }
+      movies: {
+        Row: {
+          added_by: string | null
+          category_id: string
+          created_at: string
+          genres: string[]
+          id: number
+          imdb_id: string | null
+          original_title: string | null
+          poster_path: string | null
+          release_year: number | null
+          runtime_minutes: number | null
+          seen_at: string | null
+          title: string
+          tmdb_id: number
+          tmdb_rating: number | null
+        }
+        Insert: {
+          added_by?: string | null
+          category_id: string
+          created_at?: string
+          genres?: string[]
+          id?: never
+          imdb_id?: string | null
+          original_title?: string | null
+          poster_path?: string | null
+          release_year?: number | null
+          runtime_minutes?: number | null
+          seen_at?: string | null
+          title: string
+          tmdb_id: number
+          tmdb_rating?: number | null
+        }
+        Update: {
+          added_by?: string | null
+          category_id?: string
+          created_at?: string
+          genres?: string[]
+          id?: never
+          imdb_id?: string | null
+          original_title?: string | null
+          poster_path?: string | null
+          release_year?: number | null
+          runtime_minutes?: number | null
+          seen_at?: string | null
+          title?: string
+          tmdb_id?: number
+          tmdb_rating?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "movies_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movies_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null

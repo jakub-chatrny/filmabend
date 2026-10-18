@@ -1,20 +1,30 @@
 import type { ComponentProps } from "react";
 
 const VARIANTS = {
-    primary: "bg-primary text-white hover:bg-primary-dark",
-    secondary: "bg-gray-15 text-primary-pale hover:bg-gray-40",
-    outline: "border-2 border-primary text-primary hover:bg-primary/10",
+    primary:
+        "border border-primary bg-primary text-primary-pale hover:bg-primary-dark disabled:border-primary-lighter disabled:bg-primary-lighter disabled:text-primary-lightest",
+    secondary: "bg-gray-15 text-white hover:bg-gray-40 disabled:opacity-50",
+    outline: "border-2 border-primary text-primary hover:bg-primary/10 disabled:opacity-50",
 } as const;
 
-type ButtonProps = ComponentProps<"button"> & {
+const SIZES = {
+    // Figma buttons: 12px bold, 7px × 14px padding
+    sm: "px-3.5 py-[7px] text-xs font-bold",
+    md: "px-5 py-2.5 font-semibold",
+} as const;
+
+type ButtonStyle = {
     variant?: keyof typeof VARIANTS;
+    size?: keyof typeof SIZES;
 };
 
-export function Button({ variant = "primary", className = "", ...props }: ButtonProps) {
-    return (
-        <button
-            className={`inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 font-semibold transition-colors disabled:pointer-events-none disabled:opacity-50 ${VARIANTS[variant]} ${className}`}
-            {...props}
-        />
-    );
+/** Button classes, also for links that look like buttons. */
+export function buttonClasses({ variant = "primary", size = "md" }: ButtonStyle = {}) {
+    return `inline-flex items-center justify-center gap-1.5 rounded-full whitespace-nowrap transition-colors disabled:pointer-events-none ${VARIANTS[variant]} ${SIZES[size]}`;
+}
+
+type ButtonProps = ComponentProps<"button"> & ButtonStyle;
+
+export function Button({ variant, size, className = "", ...props }: ButtonProps) {
+    return <button className={`${buttonClasses({ variant, size })} ${className}`} {...props} />;
 }

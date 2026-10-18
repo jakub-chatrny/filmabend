@@ -7,7 +7,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
     return (
         <>
             <header className="flex items-center justify-between gap-4">
-                <Link href="/" className="font-display text-2xl font-bold uppercase">
+                <Link href="/" className="font-display text-xl font-bold">
                     Filmabend
                 </Link>
                 <Suspense fallback={<UserMenuSkeleton />}>
