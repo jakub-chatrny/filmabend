@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { LibraryTabs, LibraryTabsSkeleton } from "@/components/LibraryTabs";
-import { SelectionProvider } from "@/components/Selection";
+import { MovieNightProvider } from "@/components/MovieNight";
 import { UserMenu, UserMenuSkeleton } from "@/components/UserMenu";
 import { getCurrentUser } from "@/lib/auth";
 import { getCategories } from "@/lib/categories";
@@ -9,7 +9,7 @@ import { getMovies } from "@/lib/movies";
 
 export default function AppLayout({ children }: LayoutProps<"/">) {
     return (
-        <SelectionProvider>
+        <MovieNightProvider>
             <header className="flex items-center justify-between gap-4">
                 <Suspense fallback={<LibraryTabsSkeleton />}>
                     <HeaderTabs />
@@ -19,7 +19,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
                 </Suspense>
             </header>
             {children}
-        </SelectionProvider>
+        </MovieNightProvider>
     );
 }
 

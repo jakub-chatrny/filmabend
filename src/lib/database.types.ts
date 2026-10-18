@@ -138,6 +138,97 @@ export type Database = {
           },
         ]
       }
+      pick_candidates: {
+        Row: {
+          added_at: string
+          added_by: string | null
+          movie_id: number
+          session_id: number
+        }
+        Insert: {
+          added_at?: string
+          added_by?: string | null
+          movie_id: number
+          session_id: number
+        }
+        Update: {
+          added_at?: string
+          added_by?: string | null
+          movie_id?: number
+          session_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pick_candidates_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pick_candidates_movie_id_fkey"
+            columns: ["movie_id"]
+            isOneToOne: false
+            referencedRelation: "movies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pick_candidates_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "pick_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pick_sessions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          finished_at: string | null
+          id: number
+          roll_count: number
+          rolled_at: string | null
+          status: string
+          winner_movie_id: number | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          finished_at?: string | null
+          id?: never
+          roll_count?: number
+          rolled_at?: string | null
+          status?: string
+          winner_movie_id?: number | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          finished_at?: string | null
+          id?: never
+          roll_count?: number
+          rolled_at?: string | null
+          status?: string
+          winner_movie_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pick_sessions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pick_sessions_winner_movie_id_fkey"
+            columns: ["winner_movie_id"]
+            isOneToOne: false
+            referencedRelation: "movies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -164,8 +255,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      back_to_selection: { Args: never; Returns: undefined }
+      clear_candidates: { Args: never; Returns: undefined }
+      finish_pick: { Args: never; Returns: undefined }
       hook_before_user_created: { Args: { event: Json }; Returns: Json }
       is_member: { Args: never; Returns: boolean }
+      lock_movie_night: { Args: never; Returns: undefined }
+      roll_pick: { Args: never; Returns: number }
+      toggle_candidate: { Args: { p_movie_id: number }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

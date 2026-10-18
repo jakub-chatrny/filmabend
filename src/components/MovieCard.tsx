@@ -93,10 +93,10 @@ export function MovieCard({ movie, selected = false, yearInTitle = false, badge,
 }
 
 /** Empty slot with a clapperboard, shown before there are results */
-export function PlaceholderCard({ loading = false }: { loading?: boolean }) {
+export function PlaceholderCard({ loading = false, className = "" }: { loading?: boolean; className?: string }) {
     return (
         <div
-            className={`flex aspect-187/266 w-full items-center justify-center rounded-[15px] bg-gray-15 ${loading ? "animate-pulse" : ""}`}
+            className={`flex aspect-187/266 w-full items-center justify-center rounded-[15px] bg-gray-15 ${loading ? "animate-pulse" : ""} ${className}`}
         >
             <Image src="/icons/clapperboard.svg" alt="" width={48} height={48} />
         </div>
