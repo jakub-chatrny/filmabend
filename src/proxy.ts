@@ -7,5 +7,5 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
     // Everything except Next internals and static files
-    matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico)$).*)"],
+    matcher: ["/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico)$).*)"],
 };

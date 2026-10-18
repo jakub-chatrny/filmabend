@@ -1,19 +1,30 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 import { Button, buttonClasses } from "@/components/Button";
 import { CardGrid, MovieCard } from "@/components/MovieCard";
 import { MAX_PICK, MIN_PICK, useMovieNight } from "@/components/MovieNight";
 import type { LibraryMovie } from "@/lib/movies";
+import { unmarkSeen } from "./actions";
+
+type SeenInfo = Record<number, { lines: string[]; date: string }>;
 
 type LibraryGridProps = {
     movies: LibraryMovie[];
     /** Seen movies can't be picked again */
     selectable: boolean;
+    /** "Viděno před …" texts, computed on the server so they match after hydration */
+    seen?: SeenInfo;
 };
 
-export function LibraryGrid({ movies, selectable }: LibraryGridProps) {
+export function LibraryGrid({ movies, selectable, seen }: LibraryGridProps) {
     const { isSelected, isFull, toggle, canEdit } = useMovieNight();
+
+    if (seen) {
+        return <SeenGrid movies={movies} seen={seen} />;
+    }
 
     if (!selectable || !canEdit) {
         return (
@@ -48,6 +59,32 @@ export function LibraryGrid({ movies, selectable }: LibraryGridProps) {
                 );
             })}
         </CardGrid>
+    );
+}
+
+function SeenGrid({ movies, seen }: { movies: LibraryMovie[]; seen: SeenInfo }) {
+    const router = useRouter();
+    const [pending, startTransition] = useTransition();
+    const [error, setError] = useState<string | null>(null);
+
+    const unmark = (movie: LibraryMovie) => {
+        if (pending || !window.confirm(`Vrátit „${movie.title}“ mezi neviděné?`)) return;
+        startTransition(async () => {
+            const result = await unmarkSeen(movie.id);
+            setError(result.error ?? null);
+            router.refresh();
+        });
+    };
+
+    return (
+        <>
+            {error && <p className="text-danger">{error}</p>}
+            <CardGrid>
+                {movies.map((movie) => (
+                    <MovieCard key={movie.id} movie={movie} selectable={false} seen={seen[movie.id]} onUnmark={() => unmark(movie)} />
+                ))}
+            </CardGrid>
+        </>
     );
 }
 
@@ -87,7 +124,7 @@ export function SelectionBar() {
 
 function Bar({ message, isError = false, children }: { message: string | null; isError?: boolean; children: React.ReactNode }) {
     return (
-        <div className="fixed inset-x-0 bottom-0 z-10 bg-primary-pale px-4 py-2">
+        <div className="fixed inset-x-0 bottom-0 z-10 bg-primary-pale px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
             <div className="mx-auto flex min-h-[30px] max-w-200 flex-wrap items-center justify-end gap-x-2.5 gap-y-1">
                 <p
                     className={`w-full text-xs empty:hidden sm:mr-auto sm:w-auto ${isError ? "text-danger" : "text-gray-40"}`}

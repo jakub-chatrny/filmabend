@@ -20,12 +20,16 @@ type MovieCardProps = {
     badge?: string;
     /** Hover shows the selection ring; off for movies that can't be picked */
     selectable?: boolean;
+    /** "Viděno před …" overlay from the Figma seen state, see seenAgo() */
+    seen?: { lines: string[]; date: string };
+    /** Shows a "back to unseen" button on the seen overlay */
+    onUnmark?: () => void;
 };
 
 const CARD_SIZES = "(min-width: 640px) 187px, 50vw";
 
 /** "Cardtall" from Figma */
-export function MovieCard({ movie, selected = false, yearInTitle = false, badge, selectable = true }: MovieCardProps) {
+export function MovieCard({ movie, selected = false, yearInTitle = false, badge, selectable = true, seen, onUnmark }: MovieCardProps) {
     const runtime = formatRuntime(movie.runtimeMinutes);
     const rating = movie.rating && `★ ${movie.rating}`;
     const details = [runtime, !yearInTitle && movie.releaseYear, rating].filter(Boolean).join(" | ");
@@ -41,6 +45,26 @@ export function MovieCard({ movie, selected = false, yearInTitle = false, badge,
                 {movie.posterPath && <Poster path={movie.posterPath} alt="" sizes={CARD_SIZES} />}
                 <div className="absolute inset-0 shadow-[inset_0_58px_58px_0_rgb(0_0_0/0.25)]" />
                 {selected && <div className="absolute inset-0 bg-primary/25 backdrop-blur-[1px]" />}
+                {seen && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-primary/85 px-2 text-center">
+                        <p className="text-sm text-primary-lightest">{seen.lines[0]}</p>
+                        {seen.lines.slice(1).map((line) => (
+                            <p key={line} className="text-base leading-snug font-bold text-primary-pale sm:text-lg">
+                                {line}
+                            </p>
+                        ))}
+                        <p className="mt-2 text-xs text-primary-lightest/70">{seen.date}</p>
+                        {onUnmark && (
+                            <button
+                                type="button"
+                                onClick={onUnmark}
+                                className="mt-1 rounded-full px-2 py-1 text-xs text-primary-pale underline hover:bg-black/20"
+                            >
+                                Vrátit mezi neviděné
+                            </button>
+                        )}
+                    </div>
+                )}
                 {badge && (
                     <span className="absolute top-2.5 left-2.5 rounded-full bg-black/80 px-2 py-0.5 text-xs font-semibold text-primary-pale">
                         {badge}
@@ -64,7 +88,11 @@ export function MovieCard({ movie, selected = false, yearInTitle = false, badge,
             </div>
             <div
                 className={`flex min-h-28 flex-col justify-between gap-2 px-4 py-2.5 text-black sm:px-5 ${
-                    selected ? "bg-primary-lightest" : selectable ? "bg-primary-pale group-hover:bg-primary-lightest" : "bg-primary-pale"
+                    selected || seen
+                        ? "bg-primary-lightest"
+                        : selectable
+                          ? "bg-primary-pale group-hover:bg-primary-lightest"
+                          : "bg-primary-pale"
                 }`}
             >
                 <h3 className="line-clamp-2 text-base leading-tight font-bold sm:text-xl">

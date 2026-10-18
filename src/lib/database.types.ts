@@ -260,6 +260,7 @@ export type Database = {
       finish_pick: { Args: never; Returns: undefined }
       hook_before_user_created: { Args: { event: Json }; Returns: Json }
       is_member: { Args: never; Returns: boolean }
+      keep_alive: { Args: never; Returns: string }
       lock_movie_night: { Args: never; Returns: undefined }
       roll_pick: { Args: never; Returns: number }
       toggle_candidate: { Args: { p_movie_id: number }; Returns: undefined }

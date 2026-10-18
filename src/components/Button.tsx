@@ -8,8 +8,8 @@ const VARIANTS = {
 } as const;
 
 const SIZES = {
-    // Figma buttons: 12px bold, 7px × 14px padding
-    sm: "px-3.5 py-[7px] text-xs font-bold",
+    // Figma buttons: 12px bold, 7px × 14px padding; a bit bigger on phones for thumbs
+    sm: "px-4 py-2 text-sm font-bold sm:px-3.5 sm:py-[7px] sm:text-xs",
     md: "px-5 py-2.5 font-semibold",
 } as const;
 

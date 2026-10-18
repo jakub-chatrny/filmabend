@@ -4,7 +4,7 @@ import { AddMovieForm } from "./AddMovieForm";
 
 export default function NewMoviePage({ searchParams }: PageProps<"/movies/new">) {
     return (
-        <main className="flex flex-col gap-[15px] pb-20">
+        <main className="flex flex-col gap-[15px] pb-24">
             <h1 className="font-display text-2xl font-bold">Nový film</h1>
             <Suspense>
                 <NewMovieForm searchParams={searchParams} />

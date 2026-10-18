@@ -44,6 +44,16 @@ insert into public.allowed_emails (email) values ('someone@gmail.com');
 
 Optionally enable the **Before User Created** hook (Authentication → Hooks → Postgres function `public.hook_before_user_created`) so accounts that aren't on the list are rejected before Supabase creates them.
 
+### Keeping the free project awake
+
+Free Supabase projects pause after about a week without activity. `vercel.json` schedules a daily cron (06:00 UTC) that calls `/api/keep-alive`, which runs `public.keep_alive()`. Vercel runs crons only for the production deployment. Set `CRON_SECRET` in Vercel so only the cron can call the route.
+
+## Deployment
+
+Vercel builds every push; `main` is production. Needed env variables: see `.env.example`. Supabase → Authentication → URL Configuration must list the production URL and `https://filmabend-37ht-*-jakubchatrnys-projects.vercel.app/**` for previews. Node 24 is pinned in `package.json` (`engines`).
+
+On phones, "Add to Home Screen" opens Filmabend full screen like an app.
+
 ## Scripts
 
 | Script                            | What it does               |

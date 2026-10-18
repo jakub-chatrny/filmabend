@@ -10,6 +10,7 @@ import {
     libraryHref,
     moviesInTab,
     parseLibraryQuery,
+    seenTexts,
     SEEN_TAB,
     sortMovies,
     type LibraryQuery,
@@ -20,7 +21,7 @@ import { SortSelect } from "./SortSelect";
 
 export default function LibraryPage({ searchParams }: PageProps<"/">) {
     return (
-        <main className="flex flex-col gap-[27px] pb-16">
+        <main className="flex flex-col gap-[27px] pb-24">
             <Suspense fallback={<LibrarySkeleton />}>
                 <Library searchParams={searchParams} />
             </Suspense>
@@ -36,6 +37,7 @@ async function Library({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
     const inTab = moviesInTab(movies, query.tab);
     const shown = sortMovies(filterByGenres(inTab, query.genres), query.sort, query.tab);
     const isSeenTab = query.tab === SEEN_TAB;
+    const seen = isSeenTab ? seenTexts(shown) : undefined;
     const category = categories.find((c) => c.id === query.tab);
     const title = isSeenTab ? "Viděno" : (category?.label ?? "Všechny filmy");
 
@@ -57,7 +59,7 @@ async function Library({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
                     {title} ({shown.length})
                 </h1>
                 {shown.length > 0 ? (
-                    <LibraryGrid movies={shown} selectable={!isSeenTab} />
+                    <LibraryGrid movies={shown} selectable={!isSeenTab} seen={seen} />
                 ) : inTab.length > 0 ? (
                     <p className="text-primary-lightest">
                         Žádný film neodpovídá vybraným žánrům.{" "}

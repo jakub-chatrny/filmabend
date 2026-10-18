@@ -1,4 +1,5 @@
 import type { Category } from "@/lib/categories";
+import { seenAgo } from "@/lib/format";
 import type { LibraryMovie } from "@/lib/movies";
 
 export const SEEN_TAB = "seen";
@@ -86,4 +87,13 @@ export function libraryHref(query: LibraryQuery, changes: Partial<LibraryQuery>)
     if (next.sort) params.set("sort", next.sort);
     const search = params.toString();
     return search ? `/?${search}` : "/";
+}
+
+/**
+ * "Viděno před …" texts for seen movies, computed once on the server (after the request-time reads)
+ * and passed to the client, so both render the same text.
+ */
+export function seenTexts(movies: LibraryMovie[]) {
+    const now = Date.now();
+    return Object.fromEntries(movies.filter((movie) => movie.seenAt).map((movie) => [movie.id, seenAgo(movie.seenAt!, now)]));
 }
