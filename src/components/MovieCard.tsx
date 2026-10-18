@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { Poster } from "@/components/Poster";
+import { UnmarkButton } from "@/components/UnmarkButton";
 import { csfdUrl, formatRuntime, imdbUrl } from "@/lib/format";
 
 export type MovieCardData = {
@@ -54,15 +55,7 @@ export function MovieCard({ movie, selected = false, yearInTitle = false, badge,
                             </p>
                         ))}
                         <p className="mt-2 text-xs text-primary-lightest/70">{seen.date}</p>
-                        {onUnmark && (
-                            <button
-                                type="button"
-                                onClick={onUnmark}
-                                className="mt-1 rounded-full px-2 py-1 text-xs text-primary-pale underline hover:bg-black/20"
-                            >
-                                Vrátit mezi neviděné
-                            </button>
-                        )}
+                        {onUnmark && <UnmarkButton onConfirm={onUnmark} />}
                     </div>
                 )}
                 {badge && (

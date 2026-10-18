@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import type { MovieCardData } from "@/components/MovieCard";
+import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 export type LibraryMovie = MovieCardData & {
@@ -10,16 +11,20 @@ export type LibraryMovie = MovieCardData & {
     seenAt: string | null;
 };
 
-/** The whole library; deduplicated per request so the header counts and the page share one query. */
+/**
+ * The whole library, with titles in the signed-in user's language. Deduplicated per request
+ * so the header counts and the page share one query.
+ */
 export const getMovies = cache(async (): Promise<LibraryMovie[]> => {
-    const supabase = await createClient();
+    const [{ titleLanguage }, supabase] = await Promise.all([getCurrentUser(), createClient()]);
     const { data, error } = await supabase.from("movies").select("*").order("created_at", { ascending: false });
     if (error) throw error;
 
     return data.map((row) => ({
         id: row.id,
-        title: row.title,
-        originalTitle: row.original_title,
+        title: titleLanguage === "en" ? (row.title_en ?? row.title) : row.title,
+        // Always the original title, so ČSFD/IMDb searches don't depend on the display language
+        originalTitle: row.original_title ?? row.title,
         releaseYear: row.release_year,
         runtimeMinutes: row.runtime_minutes,
         posterPath: row.poster_path,

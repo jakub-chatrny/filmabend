@@ -30,6 +30,7 @@ export async function addMovie(_previous: AddMovieState, formData: FormData): Pr
         tmdb_id: movie.tmdbId,
         imdb_id: movie.imdbId,
         title: movie.title,
+        title_en: movie.titleEn,
         original_title: movie.originalTitle,
         release_year: movie.releaseYear,
         runtime_minutes: movie.runtimeMinutes,

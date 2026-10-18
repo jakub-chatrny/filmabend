@@ -3,10 +3,14 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
+export type TitleLanguage = "cs" | "en";
+
 export type CurrentUser = {
     id: string;
     name: string;
     avatarUrl: string | null;
+    /** Show movie titles in Czech or English */
+    titleLanguage: TitleLanguage;
 };
 
 /**
@@ -22,12 +26,21 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser> => {
         redirect("/login");
     }
 
-    const { data: profile } = await supabase.from("profiles").select("id, display_name, avatar_url").eq("id", userId).maybeSingle();
+    const { data: profile } = await supabase
+        .from("profiles")
+        .select("id, display_name, avatar_url, title_language")
+        .eq("id", userId)
+        .maybeSingle();
 
     // RLS hides profiles from anyone not on the allowlist
     if (!profile) {
         redirect("/login?error=not-invited");
     }
 
-    return { id: profile.id, name: profile.display_name, avatarUrl: profile.avatar_url };
+    return {
+        id: profile.id,
+        name: profile.display_name,
+        avatarUrl: profile.avatar_url,
+        titleLanguage: profile.title_language === "cs" ? "cs" : "en",
+    };
 });

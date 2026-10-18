@@ -86,6 +86,7 @@ export type Database = {
           runtime_minutes: number | null
           seen_at: string | null
           title: string
+          title_en: string | null
           tmdb_id: number
           tmdb_rating: number | null
         }
@@ -102,6 +103,7 @@ export type Database = {
           runtime_minutes?: number | null
           seen_at?: string | null
           title: string
+          title_en?: string | null
           tmdb_id: number
           tmdb_rating?: number | null
         }
@@ -118,6 +120,7 @@ export type Database = {
           runtime_minutes?: number | null
           seen_at?: string | null
           title?: string
+          title_en?: string | null
           tmdb_id?: number
           tmdb_rating?: number | null
         }
@@ -235,18 +238,21 @@ export type Database = {
           created_at: string
           display_name: string
           id: string
+          title_language: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
           display_name: string
           id: string
+          title_language?: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
           display_name?: string
           id?: string
+          title_language?: string
         }
         Relationships: []
       }

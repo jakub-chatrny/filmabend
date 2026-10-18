@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { signOut } from "@/app/auth/actions";
 
@@ -60,6 +61,14 @@ export function UserMenu({ name, avatarUrl }: UserMenuProps) {
                     role="menu"
                     className="absolute right-0 z-20 mt-2 min-w-full overflow-hidden rounded-2xl bg-primary-pale text-black shadow-lg"
                 >
+                    <Link
+                        href="/settings"
+                        role="menuitem"
+                        onClick={() => setOpen(false)}
+                        className="block px-4 py-2 whitespace-nowrap hover:bg-primary-lightest"
+                    >
+                        Nastavení
+                    </Link>
                     <form action={signOut}>
                         <button
                             type="submit"

@@ -68,7 +68,7 @@ function SeenGrid({ movies, seen }: { movies: LibraryMovie[]; seen: SeenInfo }) 
     const [error, setError] = useState<string | null>(null);
 
     const unmark = (movie: LibraryMovie) => {
-        if (pending || !window.confirm(`Vrátit „${movie.title}“ mezi neviděné?`)) return;
+        if (pending) return;
         startTransition(async () => {
             const result = await unmarkSeen(movie.id);
             setError(result.error ?? null);

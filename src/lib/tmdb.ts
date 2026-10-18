@@ -31,7 +31,10 @@ type TmdbMovieDetails = {
 export type TmdbMovie = {
     tmdbId: number;
     imdbId: string | null;
+    /** Czech title (falls back to the original when TMDB has no translation) */
     title: string;
+    /** English title (falls back to the original) */
+    titleEn: string;
     originalTitle: string | null;
     releaseYear: number | null;
     runtimeMinutes: number | null;
@@ -53,12 +56,13 @@ async function tmdbFetch<T>(path: string, params: Record<string, string> = {}): 
     return response.json();
 }
 
-function toMovie(details: TmdbMovieDetails): TmdbMovie {
+function toMovie(details: TmdbMovieDetails, titleEn: string): TmdbMovie {
     const year = Number.parseInt(details.release_date?.slice(0, 4), 10);
     return {
         tmdbId: details.id,
         imdbId: details.imdb_id || null,
         title: details.title,
+        titleEn: titleEn || details.original_title,
         originalTitle: details.original_title !== details.title ? details.original_title : null,
         releaseYear: Number.isNaN(year) ? null : year,
         runtimeMinutes: details.runtime || null,
@@ -72,7 +76,11 @@ export async function getMovie(tmdbId: number): Promise<TmdbMovie> {
     "use cache";
     cacheLife("days");
 
-    return toMovie(await tmdbFetch<TmdbMovieDetails>(`/movie/${tmdbId}`));
+    const [details, english] = await Promise.all([
+        tmdbFetch<TmdbMovieDetails>(`/movie/${tmdbId}`),
+        tmdbFetch<Pick<TmdbMovieDetails, "title">>(`/movie/${tmdbId}`, { language: "en-US" }),
+    ]);
+    return toMovie(details, english.title);
 }
 
 /** Top search results with full details, so cards can show runtime and IMDb links. */

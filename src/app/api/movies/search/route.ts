@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { searchMovies, type TmdbMovie } from "@/lib/tmdb";
 
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-        const movies = await searchMovies(query);
+        const [movies, { titleLanguage }] = await Promise.all([searchMovies(query), getCurrentUser()]);
         const { data: existing } = await supabase
             .from("movies")
             .select("tmdb_id")
@@ -27,7 +28,14 @@ export async function GET(request: NextRequest) {
             );
         const inLibrary = new Set(existing?.map((row) => row.tmdb_id));
 
-        return Response.json(movies.map((movie): MovieSearchResult => ({ ...movie, inLibrary: inLibrary.has(movie.tmdbId) })));
+        return Response.json(
+            movies.map((movie): MovieSearchResult => ({
+                ...movie,
+                title: titleLanguage === "en" ? movie.titleEn : movie.title,
+                originalTitle: movie.originalTitle ?? movie.title,
+                inLibrary: inLibrary.has(movie.tmdbId),
+            })),
+        );
     } catch (error) {
         console.error(error);
         return Response.json({ error: "Search failed" }, { status: 502 });
