@@ -17,6 +17,11 @@
     --color-black: #0c0c0d;
     --color-danger: #f03e3e;
 
+    /* Big and 4K screens: wider page, bigger cards, more columns */
+    --breakpoint-3xl: 120rem;
+    --breakpoint-4xl: 160rem;
+    --breakpoint-5xl: 220rem;
+
     --font-display: var(--font-cinzel);
     --font-sans: var(--font-open-sans);
 

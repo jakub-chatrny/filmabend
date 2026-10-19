@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Cinzel, Open_Sans } from "next/font/google";
 import "./globals.css";
+import { PAGE_WIDTH } from "@/lib/layout";
 
 const openSans = Open_Sans({ subsets: ["latin", "latin-ext"], variable: "--font-open-sans" });
 const cinzel = Cinzel({ subsets: ["latin", "latin-ext"], variable: "--font-cinzel" });
@@ -22,7 +23,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     return (
         <html lang="cs" className={`${openSans.variable} ${cinzel.variable} antialiased`}>
             <body className="font-sans">
-                <div className="mx-auto flex min-h-dvh w-full max-w-200 flex-col gap-10 px-4 pt-[max(0.875rem,env(safe-area-inset-top))] pb-6">
+                <div
+                    className={`mx-auto flex min-h-dvh w-full ${PAGE_WIDTH} flex-col gap-10 px-4 pt-[max(0.875rem,env(safe-area-inset-top))] pb-6`}
+                >
                     {children}
                 </div>
             </body>

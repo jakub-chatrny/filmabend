@@ -27,7 +27,8 @@ type MovieCardProps = {
     onUnmark?: () => void;
 };
 
-const CARD_SIZES = "(min-width: 640px) 187px, 50vw";
+const CARD_SIZES =
+    "(min-width: 3520px) 360px, (min-width: 2560px) 280px, (min-width: 1920px) 240px, (min-width: 1536px) 220px, (min-width: 640px) 187px, 50vw";
 
 /** "Cardtall" from Figma */
 export function MovieCard({ movie, selected = false, yearInTitle = false, badge, selectable = true, seen, onUnmark }: MovieCardProps) {
@@ -88,11 +89,11 @@ export function MovieCard({ movie, selected = false, yearInTitle = false, badge,
                           : "bg-primary-pale"
                 }`}
             >
-                <h3 className="line-clamp-2 text-base leading-tight font-bold sm:text-xl">
+                <h3 className="line-clamp-2 text-base leading-tight font-bold sm:text-xl 4xl:text-2xl">
                     {movie.title}
                     {yearInTitle && movie.releaseYear && ` (${movie.releaseYear})`}
                 </h3>
-                <div className="flex flex-col gap-1 text-xs">
+                <div className="flex flex-col gap-1 text-xs 4xl:text-sm">
                     {details && (
                         <p className="truncate text-gray-40" title={rating ? "Hodnocení TMDB" : undefined}>
                             {details}
@@ -124,7 +125,14 @@ export function PlaceholderCard({ loading = false, className = "" }: { loading?:
     );
 }
 
-/** Responsive card grid: 2 columns on phones, 4 on the 800px desktop column like in Figma */
-export function CardGrid({ children }: { children: React.ReactNode }) {
-    return <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-[18px]">{children}</div>;
+const GRIDS = {
+    // 2 columns on phones, 4 on the 800px desktop column like in Figma, more on big and 4K screens
+    library:
+        "grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-[18px] 2xl:grid-cols-6 2xl:gap-6 3xl:grid-cols-7 4xl:grid-cols-8 4xl:gap-7 5xl:grid-cols-9 5xl:gap-8",
+    // The pick screen keeps the four slots from Figma, the cards just grow
+    pick: "grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-[18px] 2xl:gap-8",
+} as const;
+
+export function CardGrid({ children, variant = "library" }: { children: React.ReactNode; variant?: keyof typeof GRIDS }) {
+    return <div className={`grid ${GRIDS[variant]}`}>{children}</div>;
 }

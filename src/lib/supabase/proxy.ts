@@ -4,6 +4,10 @@ import type { Database } from "@/lib/database.types";
 
 const PUBLIC_PATHS = ["/login", "/auth", "/api/keep-alive"];
 
+// Same lifetime @supabase/ssr uses for its cookies
+const AUTH_COOKIE_MAX_AGE = 400 * 24 * 60 * 60;
+const TOUCHED_COOKIE = "filmabend-session-refreshed";
+
 /**
  * Refreshes the Supabase session cookie on every request and sends signed-out
  * visitors to /login. This is only an optimistic check; pages still verify the
@@ -45,5 +49,25 @@ export async function updateSession(request: NextRequest) {
         return redirect;
     }
 
+    if (data?.claims && !request.cookies.has(TOUCHED_COOKIE)) {
+        keepAuthCookiesAlive(request, response);
+    }
+
     return response;
+}
+
+/**
+ * The browser client refreshes the session every hour and writes the cookies from JavaScript,
+ * which Safari limits to 7 days. Once a day, re-send the auth cookies from the server so an
+ * active session keeps its long lifetime.
+ */
+function keepAuthCookiesAlive(request: NextRequest, response: NextResponse) {
+    request.cookies
+        .getAll()
+        .filter(({ name }) => name.startsWith("sb-") && name.includes("-auth-token") && !name.includes("code-verifier"))
+        // Cookies the refresh above already set carry the new values
+        .filter(({ name }) => !response.cookies.get(name))
+        .forEach(({ name, value }) => response.cookies.set(name, value, { path: "/", sameSite: "lax", maxAge: AUTH_COOKIE_MAX_AGE }));
+
+    response.cookies.set(TOUCHED_COOKIE, "1", { path: "/", sameSite: "lax", maxAge: 24 * 60 * 60 });
 }

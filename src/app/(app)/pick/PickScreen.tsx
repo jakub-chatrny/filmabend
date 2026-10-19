@@ -72,7 +72,7 @@ export function PickScreen({ movies }: { movies: LibraryMovie[] }) {
     const mobileSlots = Math.ceil(candidates.length / 2) * 2;
 
     return (
-        <section className="flex flex-col gap-[15px]">
+        <section className="mx-auto flex w-full max-w-352 flex-col gap-[15px]">
             <div className="flex items-center justify-between">
                 <h1 className="font-display text-2xl font-bold">Výběr filmu</h1>
                 <button type="button" onClick={close} disabled={night.busy} aria-label="Zavřít" className="-mr-2.5">
@@ -80,7 +80,7 @@ export function PickScreen({ movies }: { movies: LibraryMovie[] }) {
                 </button>
             </div>
 
-            <CardGrid>
+            <CardGrid variant="pick">
                 {candidates.map((movie, index) => {
                     const lit = status !== "rolled" || (rolling ? highlight === index : index === winnerIndex);
                     return (

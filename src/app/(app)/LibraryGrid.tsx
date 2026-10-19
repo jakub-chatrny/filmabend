@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 import { Button, buttonClasses } from "@/components/Button";
 import { CardGrid, MovieCard } from "@/components/MovieCard";
 import { MAX_PICK, MIN_PICK, useMovieNight } from "@/components/MovieNight";
+import { PAGE_WIDTH } from "@/lib/layout";
 import type { LibraryMovie } from "@/lib/movies";
 import { unmarkSeen } from "./actions";
 
@@ -125,7 +126,7 @@ export function SelectionBar() {
 function Bar({ message, isError = false, children }: { message: string | null; isError?: boolean; children: React.ReactNode }) {
     return (
         <div className="fixed inset-x-0 bottom-0 z-10 bg-primary-pale px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-            <div className="mx-auto flex min-h-[30px] max-w-200 flex-wrap items-center justify-end gap-x-2.5 gap-y-1">
+            <div className={`mx-auto flex min-h-[30px] ${PAGE_WIDTH} flex-wrap items-center justify-end gap-x-2.5 gap-y-1`}>
                 <p
                     className={`w-full text-xs empty:hidden sm:mr-auto sm:w-auto ${isError ? "text-danger" : "text-gray-40"}`}
                     aria-live="polite"
