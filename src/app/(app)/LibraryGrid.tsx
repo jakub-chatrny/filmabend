@@ -1,16 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Button, buttonClasses } from "@/components/Button";
 import { CardGrid, MovieCard } from "@/components/MovieCard";
 import { MAX_PICK, MIN_PICK, useMovieNight } from "@/components/MovieNight";
 import { PAGE_WIDTH } from "@/lib/layout";
 import type { LibraryMovie } from "@/lib/movies";
+import { matchesSearch } from "@/lib/search";
 import { unmarkSeen } from "./actions";
 
 type SeenInfo = Record<number, { lines: string[]; date: string }>;
+
+/** Viděno grows every week; show it in pages */
+const SEEN_PAGE_SIZE = 60;
 
 type LibraryGridProps = {
     movies: LibraryMovie[];
@@ -21,11 +25,23 @@ type LibraryGridProps = {
 };
 
 export function LibraryGrid({ movies, selectable, seen }: LibraryGridProps) {
-    const { isSelected, isFull, toggle, canEdit } = useMovieNight();
+    const query = useSearchParams().get("q")?.trim() ?? "";
+    const found = query ? movies.filter((movie) => matchesSearch(movie.searchText, query)) : movies;
 
-    if (seen) {
-        return <SeenGrid movies={movies} seen={seen} />;
-    }
+    return (
+        <>
+            {query && (
+                <p className="text-sm text-primary-lightest" aria-live="polite">
+                    {found.length > 0 ? `Nalezeno ${found.length} z ${movies.length}` : `Pro „${query}“ jsme nic nenašli.`}
+                </p>
+            )}
+            {seen ? <SeenGrid key={query} movies={found} seen={seen} /> : <PickableGrid movies={found} selectable={selectable} />}
+        </>
+    );
+}
+
+function PickableGrid({ movies, selectable }: { movies: LibraryMovie[]; selectable: boolean }) {
+    const { isSelected, isFull, toggle, canEdit } = useMovieNight();
 
     if (!selectable || !canEdit) {
         return (
@@ -67,6 +83,7 @@ function SeenGrid({ movies, seen }: { movies: LibraryMovie[]; seen: SeenInfo }) 
     const router = useRouter();
     const [pending, startTransition] = useTransition();
     const [error, setError] = useState<string | null>(null);
+    const [limit, setLimit] = useState(SEEN_PAGE_SIZE);
 
     const unmark = (movie: LibraryMovie) => {
         if (pending) return;
@@ -77,14 +94,21 @@ function SeenGrid({ movies, seen }: { movies: LibraryMovie[]; seen: SeenInfo }) 
         });
     };
 
+    const remaining = movies.length - limit;
+
     return (
         <>
             {error && <p className="text-danger">{error}</p>}
             <CardGrid>
-                {movies.map((movie) => (
+                {movies.slice(0, limit).map((movie) => (
                     <MovieCard key={movie.id} movie={movie} selectable={false} seen={seen[movie.id]} onUnmark={() => unmark(movie)} />
                 ))}
             </CardGrid>
+            {remaining > 0 && (
+                <Button variant="outline" className="self-center" onClick={() => setLimit((value) => value + SEEN_PAGE_SIZE)}>
+                    Načíst další ({remaining})
+                </Button>
+            )}
         </>
     );
 }

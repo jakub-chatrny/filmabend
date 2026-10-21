@@ -37,6 +37,8 @@ export async function addMovie(_previous: AddMovieState, formData: FormData): Pr
         poster_path: movie.posterPath,
         genres: movie.genres,
         tmdb_rating: movie.rating,
+        directors: movie.directors,
+        actors: movie.actors,
         category_id: categoryId,
         added_by: user.id,
     });

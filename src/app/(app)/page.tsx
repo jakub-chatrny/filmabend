@@ -4,19 +4,11 @@ import { Suspense } from "react";
 import { buttonClasses } from "@/components/Button";
 import { CardGrid, PlaceholderCard } from "@/components/MovieCard";
 import { getCategories } from "@/lib/categories";
-import {
-    filterByGenres,
-    genresOf,
-    libraryHref,
-    moviesInTab,
-    parseLibraryQuery,
-    seenTexts,
-    SEEN_TAB,
-    sortMovies,
-    type LibraryQuery,
-} from "@/lib/library";
+import { filterByGenres, genresOf, libraryHref, moviesInTab, parseLibraryQuery, seenTexts, SEEN_TAB, sortMovies } from "@/lib/library";
 import { getMovies } from "@/lib/movies";
+import { GenreChips } from "./GenreChips";
 import { LibraryGrid, SelectionBar } from "./LibraryGrid";
+import { LibrarySearch } from "./LibrarySearch";
 import { SortSelect } from "./SortSelect";
 
 export default function LibraryPage({ searchParams }: PageProps<"/">) {
@@ -44,8 +36,10 @@ async function Library({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
     return (
         <>
             <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
-                <GenreChips query={query} genres={genresOf(inTab)} />
-                <div className="ml-auto flex items-center gap-2.5">
+                <GenreChips genres={genresOf(inTab)} />
+                <div className="ml-auto flex w-full flex-wrap items-center justify-end gap-2.5 sm:w-auto sm:flex-nowrap">
+                    {/* Remounts per tab, so switching tabs starts with an empty search */}
+                    <LibrarySearch key={query.tab ?? "all"} />
                     <SortSelect />
                     <Link href={category ? `/movies/new?category=${category.id}` : "/movies/new"} className={buttonClasses({ size: "sm" })}>
                         <Image src="/icons/plus.svg" alt="" width={12} height={12} />
@@ -74,36 +68,6 @@ async function Library({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
                 )}
             </section>
         </>
-    );
-}
-
-/** "Tag" chips from Figma: selected genres are filled with ×, the rest are outlined links */
-function GenreChips({ query, genres }: { query: LibraryQuery; genres: string[] }) {
-    if (genres.length === 0) return null;
-
-    return (
-        <ul className="flex flex-wrap gap-[5px]">
-            {genres.map((genre) => {
-                const active = query.genres.includes(genre);
-                return (
-                    <li key={genre}>
-                        <Link
-                            href={libraryHref(query, {
-                                genres: active ? query.genres.filter((g) => g !== genre) : [...query.genres, genre],
-                            })}
-                            scroll={false}
-                            aria-pressed={active}
-                            className={`flex items-center rounded-[20px] border border-primary py-[5px] text-xs transition-colors ${
-                                active ? "bg-primary pr-1.5 pl-2.5 text-[#e0e0e0]" : "px-2.5 text-primary underline hover:bg-primary/10"
-                            }`}
-                        >
-                            {genre}
-                            {active && <Image src="/icons/close.svg" alt="Odebrat" width={14} height={14} />}
-                        </Link>
-                    </li>
-                );
-            })}
-        </ul>
     );
 }
 

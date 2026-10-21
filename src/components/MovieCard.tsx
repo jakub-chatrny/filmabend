@@ -48,14 +48,14 @@ export function MovieCard({ movie, selected = false, yearInTitle = false, badge,
                 <div className="absolute inset-0 shadow-[inset_0_58px_58px_0_rgb(0_0_0/0.25)]" />
                 {selected && <div className="absolute inset-0 bg-primary/25 backdrop-blur-[1px]" />}
                 {seen && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-primary/85 px-2 text-center">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-primary/50 px-2 text-center [text-shadow:0_1px_3px_rgb(0_0_0/0.7)]">
                         <p className="text-sm text-primary-lightest">{seen.lines[0]}</p>
                         {seen.lines.slice(1).map((line) => (
                             <p key={line} className="text-base leading-snug font-bold text-primary-pale sm:text-lg">
                                 {line}
                             </p>
                         ))}
-                        <p className="mt-2 text-xs text-primary-lightest/70">{seen.date}</p>
+                        <p className="mt-2 text-xs text-primary-lightest">{seen.date}</p>
                         {onUnmark && <UnmarkButton onConfirm={onUnmark} />}
                     </div>
                 )}
@@ -127,8 +127,10 @@ export function PlaceholderCard({ loading = false, className = "" }: { loading?:
 
 const GRIDS = {
     // 2 columns on phones, 4 on the 800px desktop column like in Figma, more on big and 4K screens
+    // Off-screen cards skip layout and paint (content-visibility); the placeholder height is
+    // replaced by the real one once a card has been rendered
     library:
-        "grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-[18px] 2xl:grid-cols-6 2xl:gap-6 3xl:grid-cols-7 4xl:grid-cols-8 4xl:gap-7 5xl:grid-cols-9 5xl:gap-8",
+        "grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-[18px] 2xl:grid-cols-6 2xl:gap-6 3xl:grid-cols-7 4xl:grid-cols-8 4xl:gap-7 5xl:grid-cols-9 5xl:gap-8 *:[content-visibility:auto] *:[contain-intrinsic-block-size:auto_360px]",
     // The pick screen keeps the four slots from Figma, the cards just grow
     pick: "grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-[18px] 2xl:gap-8",
 } as const;

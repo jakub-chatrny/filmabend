@@ -25,6 +25,10 @@ type TmdbMovieDetails = {
     poster_path: string | null;
     vote_average: number;
     genres: { id: number; name: string }[];
+    credits?: {
+        cast: { name: string; order: number }[];
+        crew: { name: string; job: string }[];
+    };
 };
 
 /** Movie details in the shape we store in the `movies` table. */
@@ -41,6 +45,9 @@ export type TmdbMovie = {
     posterPath: string | null;
     genres: string[];
     rating: number | null;
+    directors: string[];
+    /** Main cast, top billing first */
+    actors: string[];
 };
 
 async function tmdbFetch<T>(path: string, params: Record<string, string> = {}): Promise<T> {
@@ -69,6 +76,11 @@ function toMovie(details: TmdbMovieDetails, titleEn: string): TmdbMovie {
         posterPath: details.poster_path,
         genres: details.genres.map((genre) => genre.name),
         rating: details.vote_average ? Math.round(details.vote_average * 10) / 10 : null,
+        directors: [...new Set(details.credits?.crew.filter((person) => person.job === "Director").map((person) => person.name))],
+        actors: (details.credits?.cast ?? [])
+            .toSorted((a, b) => a.order - b.order)
+            .slice(0, 10)
+            .map((person) => person.name),
     };
 }
 
@@ -77,7 +89,7 @@ export async function getMovie(tmdbId: number): Promise<TmdbMovie> {
     cacheLife("days");
 
     const [details, english] = await Promise.all([
-        tmdbFetch<TmdbMovieDetails>(`/movie/${tmdbId}`),
+        tmdbFetch<TmdbMovieDetails>(`/movie/${tmdbId}`, { append_to_response: "credits" }),
         tmdbFetch<Pick<TmdbMovieDetails, "title">>(`/movie/${tmdbId}`, { language: "en-US" }),
     ]);
     return toMovie(details, english.title);

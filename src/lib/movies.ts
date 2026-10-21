@@ -2,6 +2,7 @@ import "server-only";
 import { cache } from "react";
 import type { MovieCardData } from "@/components/MovieCard";
 import { getCurrentUser } from "@/lib/auth";
+import { normalizeForSearch } from "@/lib/search";
 import { createClient } from "@/lib/supabase/server";
 
 export type LibraryMovie = MovieCardData & {
@@ -9,6 +10,8 @@ export type LibraryMovie = MovieCardData & {
     categoryId: string;
     genres: string[];
     seenAt: string | null;
+    /** Titles in all languages, directors and actors, normalized for the library search */
+    searchText: string;
 };
 
 /**
@@ -33,5 +36,8 @@ export const getMovies = cache(async (): Promise<LibraryMovie[]> => {
         categoryId: row.category_id,
         genres: row.genres,
         seenAt: row.seen_at,
+        searchText: normalizeForSearch(
+            [row.title, row.title_en, row.original_title, ...row.directors, ...row.actors].filter(Boolean).join(" | "),
+        ),
     }));
 });

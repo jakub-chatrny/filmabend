@@ -74,9 +74,11 @@ export type Database = {
       }
       movies: {
         Row: {
+          actors: string[]
           added_by: string | null
           category_id: string
           created_at: string
+          directors: string[]
           genres: string[]
           id: number
           imdb_id: string | null
@@ -91,9 +93,11 @@ export type Database = {
           tmdb_rating: number | null
         }
         Insert: {
+          actors?: string[]
           added_by?: string | null
           category_id: string
           created_at?: string
+          directors?: string[]
           genres?: string[]
           id?: never
           imdb_id?: string | null
@@ -108,9 +112,11 @@ export type Database = {
           tmdb_rating?: number | null
         }
         Update: {
+          actors?: string[]
           added_by?: string | null
           category_id?: string
           created_at?: string
+          directors?: string[]
           genres?: string[]
           id?: never
           imdb_id?: string | null
