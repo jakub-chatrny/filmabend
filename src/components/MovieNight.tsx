@@ -88,14 +88,21 @@ export function MovieNightProvider({ children }: { children: ReactNode }) {
     const router = useRouter();
     const pathname = usePathname();
     const [store] = useState(createStore);
+    // Quick taps send several toggles at once. A read that started before the last of them
+    // finished would bring back the old picks, so only the newest read counts, and none
+    // while a toggle is still on its way.
+    const lastRefresh = useRef(0);
+    const pendingToggles = useRef(0);
 
     const refresh = useCallback(async () => {
+        const id = ++lastRefresh.current;
         const { data, error } = await getClient()
             .from("pick_sessions")
             .select("id, status, winner_movie_id, roll_count, rolled_at, pick_candidates(movie_id, added_at)")
             .order("id", { ascending: false })
             .limit(1)
             .maybeSingle();
+        if (id !== lastRefresh.current || pendingToggles.current > 0) return;
         if (error) {
             store.update({ error: "Nepodařilo se načíst výběr." });
             return;
@@ -190,11 +197,13 @@ export function MovieNightProvider({ children }: { children: ReactNode }) {
                           ? [...current.ids, movieId]
                           : current.ids,
                 }));
+                pendingToggles.current++;
                 void getClient()
                     .rpc("toggle_candidate", { p_movie_id: movieId })
                     .then(({ error }) => {
+                        pendingToggles.current--;
                         if (error) store.update({ error: error.message });
-                        void refresh();
+                        if (pendingToggles.current === 0) void refresh();
                     });
             },
             clear: async () => void (await call("clear_candidates")),

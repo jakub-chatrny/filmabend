@@ -5,7 +5,6 @@ import { csfdUrl, formatRuntime, imdbUrl } from "@/lib/format";
 
 export type MovieCardData = {
     title: string;
-    originalTitle: string | null;
     releaseYear: number | null;
     runtimeMinutes: number | null;
     posterPath: string | null;
@@ -35,7 +34,6 @@ export function MovieCard({ movie, selected = false, yearInTitle = false, badge,
     const runtime = formatRuntime(movie.runtimeMinutes);
     const rating = movie.rating && `★ ${movie.rating}`;
     const details = [runtime, !yearInTitle && movie.releaseYear, rating].filter(Boolean).join(" | ");
-    const searchTitle = movie.originalTitle ?? movie.title;
 
     return (
         <div
@@ -100,11 +98,11 @@ export function MovieCard({ movie, selected = false, yearInTitle = false, badge,
                         </p>
                     )}
                     <p>
-                        <a href={csfdUrl(searchTitle)} target="_blank" rel="noreferrer" className="text-primary underline">
+                        <a href={csfdUrl(movie.title)} target="_blank" rel="noreferrer" className="text-primary underline">
                             ČSFD
                         </a>
                         {" | "}
-                        <a href={imdbUrl(movie.imdbId, searchTitle)} target="_blank" rel="noreferrer" className="text-primary underline">
+                        <a href={imdbUrl(movie.imdbId, movie.title)} target="_blank" rel="noreferrer" className="text-primary underline">
                             IMDB
                         </a>
                     </p>

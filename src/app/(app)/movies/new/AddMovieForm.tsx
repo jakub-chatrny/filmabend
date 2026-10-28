@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
 import type { MovieSearchResult } from "@/app/api/movies/search/route";
 import { Button, buttonClasses } from "@/components/Button";
@@ -18,7 +19,13 @@ type AddMovieFormProps = {
     defaultCategoryId?: string;
 };
 
-export function AddMovieForm({ categories, defaultCategoryId = "" }: AddMovieFormProps) {
+/** Starts fresh on every visit; Next keeps visited pages alive, which would bring back the last search and pick */
+export function AddMovieForm(props: AddMovieFormProps) {
+    const { bfcacheId } = useRouter();
+    return <MovieForm key={bfcacheId} {...props} />;
+}
+
+function MovieForm({ categories, defaultCategoryId = "" }: AddMovieFormProps) {
     const [state, formAction, pending] = useActionState(addMovie, {});
     const [categoryId, setCategoryId] = useState(defaultCategoryId);
     const [query, setQuery] = useState("");
@@ -46,7 +53,7 @@ export function AddMovieForm({ categories, defaultCategoryId = "" }: AddMovieFor
             } catch {
                 if (!controller.signal.aborted) setSearch({ query: trimmedQuery, results: null, failed: true });
             }
-        }, 300);
+        }, 400);
 
         return () => {
             clearTimeout(timeout);

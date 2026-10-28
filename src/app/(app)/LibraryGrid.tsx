@@ -2,16 +2,16 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useCallback, useLayoutEffect, useOptimistic, useState, useTransition } from "react";
 import { Button, buttonClasses } from "@/components/Button";
+import { ContextMenu } from "@/components/ContextMenu";
 import { CardGrid, MovieCard } from "@/components/MovieCard";
 import { MAX_PICK, MIN_PICK, useMovieNight } from "@/components/MovieNight";
 import { PAGE_WIDTH } from "@/lib/layout";
+import type { SeenInfo } from "@/lib/library";
 import type { LibraryMovie } from "@/lib/movies";
 import { matchesSearch } from "@/lib/search";
-import { unmarkSeen } from "./actions";
-
-type SeenInfo = Record<number, { lines: string[]; date: string }>;
+import { markSeen, unmarkSeen } from "./actions";
 
 /** Viděno grows every week; show it in pages */
 const SEEN_PAGE_SIZE = 60;
@@ -42,41 +42,98 @@ export function LibraryGrid({ movies, selectable, seen }: LibraryGridProps) {
 
 function PickableGrid({ movies, selectable }: { movies: LibraryMovie[]; selectable: boolean }) {
     const { isSelected, isFull, toggle, canEdit } = useMovieNight();
+    const cardMenu = useCardMenu();
+    const shown = movies.filter((movie) => !cardMenu.hidden.includes(movie.id));
 
     if (!selectable || !canEdit) {
         return (
-            <CardGrid>
-                {movies.map((movie) => (
-                    <MovieCard key={movie.id} movie={movie} selectable={false} selected={selectable && isSelected(movie.id)} />
-                ))}
-            </CardGrid>
+            <>
+                {cardMenu.element}
+                <CardGrid>
+                    {shown.map((movie) => (
+                        <div key={movie.id} onContextMenu={(event) => cardMenu.open(event, movie)}>
+                            <MovieCard movie={movie} selectable={false} selected={selectable && isSelected(movie.id)} />
+                        </div>
+                    ))}
+                </CardGrid>
+            </>
         );
     }
 
     return (
-        <CardGrid>
-            {movies.map((movie) => {
-                const selected = isSelected(movie.id);
-                const blocked = isFull && !selected;
-                return (
-                    <label
-                        key={movie.id}
-                        className={blocked ? "cursor-not-allowed" : "cursor-pointer"}
-                        title={blocked ? `Vybrat jde nejvýš ${MAX_PICK} filmů` : undefined}
-                    >
-                        <input
-                            type="checkbox"
-                            className="sr-only"
-                            checked={selected}
-                            disabled={blocked}
-                            onChange={() => toggle(movie.id)}
-                        />
-                        <MovieCard movie={movie} selected={selected} selectable={!blocked} />
-                    </label>
-                );
-            })}
-        </CardGrid>
+        <>
+            {cardMenu.element}
+            <CardGrid>
+                {shown.map((movie) => {
+                    const selected = isSelected(movie.id);
+                    const blocked = isFull && !selected;
+                    return (
+                        <label
+                            key={movie.id}
+                            className={blocked ? "cursor-not-allowed" : "cursor-pointer"}
+                            title={blocked ? `Vybrat jde nejvýš ${MAX_PICK} filmů` : undefined}
+                            onContextMenu={(event) => cardMenu.open(event, movie)}
+                        >
+                            <input
+                                type="checkbox"
+                                className="sr-only"
+                                checked={selected}
+                                disabled={blocked}
+                                onChange={() => toggle(movie.id)}
+                            />
+                            <MovieCard movie={movie} selected={selected} selectable={!blocked} />
+                        </label>
+                    );
+                })}
+            </CardGrid>
+        </>
     );
+}
+
+/** Right-click menu on unseen cards ("Označit jako viděné"); marked movies disappear right away */
+function useCardMenu() {
+    const router = useRouter();
+    const [menu, setMenu] = useState<{ movie: LibraryMovie; x: number; y: number } | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [hidden, hide] = useOptimistic<number[], number>([], (ids, id) => [...ids, id]);
+    const [, startTransition] = useTransition();
+    const close = useCallback(() => setMenu(null), []);
+
+    // Don't come back to a page with the menu still open (Next keeps visited pages alive)
+    useLayoutEffect(() => close, [close]);
+
+    const markAsSeen = (movie: LibraryMovie) => {
+        setError(null);
+        startTransition(async () => {
+            hide(movie.id);
+            const result = await markSeen(movie.id);
+            if (result.error) setError(result.error);
+            router.refresh();
+        });
+    };
+
+    return {
+        hidden,
+        open: (event: React.MouseEvent, movie: LibraryMovie) => {
+            // ČSFD/IMDb links keep the browser's menu (open in a new tab …)
+            if ((event.target as Element).closest("a")) return;
+            event.preventDefault();
+            setMenu({ movie, x: event.clientX, y: event.clientY });
+        },
+        element: (
+            <>
+                {error && <p className="text-danger">{error}</p>}
+                {menu && (
+                    <ContextMenu
+                        x={menu.x}
+                        y={menu.y}
+                        onClose={close}
+                        items={[{ label: "Označit jako viděné", onSelect: () => markAsSeen(menu.movie) }]}
+                    />
+                )}
+            </>
+        ),
+    };
 }
 
 function SeenGrid({ movies, seen }: { movies: LibraryMovie[]; seen: SeenInfo }) {

@@ -1,12 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { SORT_OPTIONS } from "@/lib/library";
 
 /** Small pill select from Figma ("Vyberte řazení") */
 export function SortSelect() {
-    const router = useRouter();
     const searchParams = useSearchParams();
     const value = searchParams.get("sort") ?? "";
 
@@ -19,7 +18,8 @@ export function SortSelect() {
                     const params = new URLSearchParams(searchParams);
                     if (event.target.value) params.set("sort", event.target.value);
                     else params.delete("sort");
-                    router.replace(`/?${params}`, { scroll: false });
+                    // Sorting happens on the client, no need to ask the server
+                    window.history.replaceState(null, "", `/?${params}`);
                 }}
                 className={`h-[30px] w-full appearance-none rounded-[32px] border border-gray-4 bg-black/50 pr-8 pl-2.5 text-xs ${value ? "text-primary-pale" : "text-gray-5"}`}
             >

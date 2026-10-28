@@ -26,8 +26,6 @@ export const getMovies = cache(async (): Promise<LibraryMovie[]> => {
     return data.map((row) => ({
         id: row.id,
         title: titleLanguage === "en" ? (row.title_en ?? row.title) : row.title,
-        // Always the original title, so ČSFD/IMDb searches don't depend on the display language
-        originalTitle: row.original_title ?? row.title,
         releaseYear: row.release_year,
         runtimeMinutes: row.runtime_minutes,
         posterPath: row.poster_path,

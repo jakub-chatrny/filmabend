@@ -7,11 +7,19 @@ import { useEffect, useState } from "react";
 import { Button, buttonClasses } from "@/components/Button";
 import { CardGrid, MovieCard, PlaceholderCard } from "@/components/MovieCard";
 import { MAX_PICK, MIN_PICK, useMovieNight } from "@/components/MovieNight";
-import { csfdUrl, imdbUrl } from "@/lib/format";
+import { csfdUrl, imdbUrl, subtitlesUrl } from "@/lib/format";
 import type { LibraryMovie } from "@/lib/movies";
 
 /** Rolls older than this are shown as a result right away instead of animating again */
-const REPLAY_WINDOW_MS = 15_000;
+const REPLAY_WINDOW_MS = 20_000;
+
+/** The highlight moves at least this many times, whatever the number of movies */
+const ROLL_MIN_STEPS = 24;
+/** Time between highlight moves: quick at the start, slowing down towards the end */
+const ROLL_FIRST_STEP_MS = 50;
+const ROLL_LAST_STEP_MS = 750;
+/** Pause on the winner before the result shows */
+const ROLL_SETTLE_MS = 900;
 
 /** "Stránka Výběr filmu" from Figma */
 export function PickScreen({ movies }: { movies: LibraryMovie[] }) {
@@ -23,7 +31,7 @@ export function PickScreen({ movies }: { movies: LibraryMovie[] }) {
     const status = night.night?.status;
     const winnerIndex = status === "rolled" ? candidates.findIndex((movie) => movie.id === night.night?.winnerMovieId) : -1;
     const rollKey = status === "rolled" && night.night ? `${night.night.id}:${night.night.rollCount}` : null;
-    const { highlight, rolling } = useRollAnimation(rollKey, winnerIndex, candidates.length, night.night?.rolledAt ?? null);
+    const { highlight, rolling, duration } = useRollAnimation(rollKey, winnerIndex, candidates.length, night.night?.rolledAt ?? null);
 
     const close = async () => {
         if (status === "rolled") await night.backToSelection();
@@ -105,6 +113,7 @@ export function PickScreen({ movies }: { movies: LibraryMovie[] }) {
                                 width={32}
                                 height={37}
                                 className={rolling ? "motion-safe:animate-roll" : ""}
+                                style={rolling ? ({ "--roll-duration": `${duration}ms` } as React.CSSProperties) : undefined}
                             />
                         </div>
                     );
@@ -139,30 +148,15 @@ export function PickScreen({ movies }: { movies: LibraryMovie[] }) {
                                 Dnes uvidíte <span className="text-primary-pale">{winner.title}</span>
                             </p>
                             <p className="font-display text-sm font-bold">
-                                <a
-                                    href={titulkyUrl(winner.originalTitle ?? winner.title)}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="underline"
-                                >
+                                <a href={subtitlesUrl(winner.title)} target="_blank" rel="noreferrer" className="underline">
                                     Titulky
                                 </a>
                                 {" | "}
-                                <a
-                                    href={csfdUrl(winner.originalTitle ?? winner.title)}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="underline"
-                                >
+                                <a href={csfdUrl(winner.title)} target="_blank" rel="noreferrer" className="underline">
                                     ČSFD
                                 </a>
                                 {" | "}
-                                <a
-                                    href={imdbUrl(winner.imdbId, winner.originalTitle ?? winner.title)}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="underline"
-                                >
+                                <a href={imdbUrl(winner.imdbId, winner.title)} target="_blank" rel="noreferrer" className="underline">
                                     IMDB
                                 </a>
                             </p>
@@ -180,10 +174,6 @@ export function PickScreen({ movies }: { movies: LibraryMovie[] }) {
             </div>
         </section>
     );
-}
-
-function titulkyUrl(title: string) {
-    return `https://www.titulky.com/?Fulltext=${encodeURIComponent(title)}`;
 }
 
 /**
@@ -204,24 +194,40 @@ function useRollAnimation(rollKey: string | null, winnerIndex: number, count: nu
             return () => timers.forEach(clearTimeout);
         }
 
-        // About three laps, ending exactly on the winner
-        const steps = count * 3 + winnerIndex;
-        let elapsed = 0;
-        for (let step = 0; step <= steps; step++) {
-            const progress = step / steps;
-            elapsed += 60 + 280 * progress * progress;
-            timers.push(setTimeout(() => setHighlight(step % count), elapsed));
-        }
+        const delays = rollDelays(count, winnerIndex);
+        delays.forEach((delay, step) => timers.push(setTimeout(() => setHighlight(step % count), delay)));
         timers.push(
-            setTimeout(() => {
-                setFinishedKey(rollKey);
-                setHighlight(null);
-            }, elapsed + 500),
+            setTimeout(
+                () => {
+                    setFinishedKey(rollKey);
+                    setHighlight(null);
+                },
+                delays.at(-1)! + ROLL_SETTLE_MS,
+            ),
         );
 
         return () => timers.forEach(clearTimeout);
     }, [rollKey, winnerIndex, count, rolledAt, finishedKey]);
 
     const rolling = !!rollKey && winnerIndex >= 0 && rollKey !== finishedKey;
-    return { highlight: rolling ? highlight : null, rolling };
+    const duration = count > 0 && winnerIndex >= 0 ? rollDelays(count, winnerIndex).at(-1)! : 0;
+    return { highlight: rolling ? highlight : null, rolling, duration };
+}
+
+/**
+ * When each highlight move happens: whole laps around the cards, ending exactly on the winner.
+ * The gaps grow with the cube of the progress, so it races at first and crawls at the end
+ * (about 6 seconds in total).
+ */
+function rollDelays(count: number, winnerIndex: number) {
+    const laps = Math.max(3, Math.ceil(ROLL_MIN_STEPS / count));
+    const steps = count * laps + winnerIndex;
+    const delays: number[] = [];
+    let elapsed = 0;
+    for (let step = 0; step <= steps; step++) {
+        const progress = step / steps;
+        elapsed += ROLL_FIRST_STEP_MS + (ROLL_LAST_STEP_MS - ROLL_FIRST_STEP_MS) * progress ** 3;
+        delays.push(elapsed);
+    }
+    return delays;
 }

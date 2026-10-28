@@ -1,9 +1,9 @@
 import type { NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { searchMovies, type TmdbMovie } from "@/lib/tmdb";
+import { searchMovies, type TmdbMovieSummary } from "@/lib/tmdb";
 
-export type MovieSearchResult = TmdbMovie & { inLibrary: boolean };
+export type MovieSearchResult = TmdbMovieSummary & { inLibrary: boolean };
 
 export async function GET(request: NextRequest) {
     const supabase = await createClient();
@@ -32,7 +32,6 @@ export async function GET(request: NextRequest) {
             movies.map((movie): MovieSearchResult => ({
                 ...movie,
                 title: titleLanguage === "en" ? movie.titleEn : movie.title,
-                originalTitle: movie.originalTitle ?? movie.title,
                 inLibrary: inLibrary.has(movie.tmdbId),
             })),
         );

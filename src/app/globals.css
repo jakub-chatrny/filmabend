@@ -27,10 +27,11 @@
 
     --shadow-card: 0 0 20px rgb(0 0 0 / 0.25);
 
-    --animate-roll: roll 0.6s linear infinite;
+    /* Spins fast, then slows down and stops together with the highlight (--roll-duration) */
+    --animate-roll: roll var(--roll-duration, 6s) cubic-bezier(0.15, 0.65, 0.3, 1) forwards;
     @keyframes roll {
         to {
-            transform: rotate(360deg);
+            transform: rotate(2160deg);
         }
     }
 }

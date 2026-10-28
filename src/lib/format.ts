@@ -13,6 +13,11 @@ export function imdbUrl(imdbId: string | null, title: string) {
     return imdbId ? `https://www.imdb.com/title/${imdbId}/` : `https://www.imdb.com/find/?q=${encodeURIComponent(title)}`;
 }
 
+/** Czech and English subtitles */
+export function subtitlesUrl(title: string) {
+    return `https://www.opensubtitles.com/cs/cs,en/search-all/q-${encodeURIComponent(title)}/hearing_impaired-include/machine_translated-/trusted_sources-`;
+}
+
 const TIME_ZONE = "Europe/Prague";
 const DAY_MS = 24 * 60 * 60 * 1000;
 

@@ -93,7 +93,9 @@ export function libraryHref(query: LibraryQuery, changes: Partial<LibraryQuery>)
  * "Viděno před …" texts for seen movies, computed once on the server (after the request-time reads)
  * and passed to the client, so both render the same text.
  */
-export function seenTexts(movies: LibraryMovie[]) {
+export type SeenInfo = Record<number, { lines: string[]; date: string }>;
+
+export function seenTexts(movies: LibraryMovie[]): SeenInfo {
     const now = Date.now();
     return Object.fromEntries(movies.filter((movie) => movie.seenAt).map((movie) => [movie.id, seenAgo(movie.seenAt!, now)]));
 }

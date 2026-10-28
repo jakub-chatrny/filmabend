@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { LibraryLink } from "@/components/LibraryLink";
 
 export type LibraryTab = {
     /** undefined = "Vše" */
@@ -22,7 +22,7 @@ export function LibraryTabs({ tabs }: { tabs: LibraryTab[] }) {
                     const active = pathname === "/" && activeTab === tab.id;
                     return (
                         <li key={tab.id ?? "all"}>
-                            <Link
+                            <LibraryLink
                                 href={tab.id ? `/?tab=${tab.id}` : "/"}
                                 aria-current={active ? "page" : undefined}
                                 className={`block border-b-2 py-1.5 transition-colors ${
@@ -30,7 +30,7 @@ export function LibraryTabs({ tabs }: { tabs: LibraryTab[] }) {
                                 }`}
                             >
                                 {tab.label} ({tab.count})
-                            </Link>
+                            </LibraryLink>
                         </li>
                     );
                 })}

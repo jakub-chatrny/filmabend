@@ -4,16 +4,16 @@ import { cacheLife } from "next/cache";
 const TMDB_API_URL = "https://api.themoviedb.org/3";
 const LANGUAGE = "cs-CZ";
 
-type TmdbSearchResponse = {
-    results: {
-        id: number;
-        title: string;
-        original_title: string;
-        release_date: string;
-        poster_path: string | null;
-        vote_average: number;
-    }[];
+type TmdbSearchResult = {
+    id: number;
+    title: string;
+    original_title: string;
+    release_date: string;
+    poster_path: string | null;
+    vote_average: number;
 };
+
+type TmdbSearchResponse = { results: TmdbSearchResult[] };
 
 type TmdbMovieDetails = {
     id: number;
@@ -50,20 +50,33 @@ export type TmdbMovie = {
     actors: string[];
 };
 
+/** What a search result card needs; credits are only loaded when a movie is added */
+export type TmdbMovieSummary = Omit<TmdbMovie, "directors" | "actors">;
+
+/** TMDB throttles bursts (one search loads a dozen movies); wait and try again a couple of times */
+const RETRY_DELAYS_MS = [400, 1200];
+
 async function tmdbFetch<T>(path: string, params: Record<string, string> = {}): Promise<T> {
     const url = new URL(`${TMDB_API_URL}${path}`);
     url.search = new URLSearchParams({ language: LANGUAGE, ...params }).toString();
 
-    const response = await fetch(url, {
-        headers: { accept: "application/json", Authorization: `Bearer ${process.env.TMDB_API_READ_TOKEN}` },
-    });
-    if (!response.ok) {
-        throw new Error(`TMDB ${path} failed with ${response.status}`);
+    for (let attempt = 0; ; attempt++) {
+        const response = await fetch(url, {
+            headers: { accept: "application/json", Authorization: `Bearer ${process.env.TMDB_API_READ_TOKEN}` },
+        });
+        if (response.ok) {
+            return response.json();
+        }
+        const retryable = response.status === 429 || response.status >= 500;
+        if (!retryable || attempt >= RETRY_DELAYS_MS.length) {
+            throw new Error(`TMDB ${path} failed with ${response.status}`);
+        }
+        const retryAfterMs = Number(response.headers.get("retry-after")) * 1000;
+        await new Promise((resolve) => setTimeout(resolve, Math.min(retryAfterMs || RETRY_DELAYS_MS[attempt], 3000)));
     }
-    return response.json();
 }
 
-function toMovie(details: TmdbMovieDetails, titleEn: string): TmdbMovie {
+function toSummary(details: TmdbSearchResult & Partial<TmdbMovieDetails>, titleEn: string | undefined): TmdbMovieSummary {
     const year = Number.parseInt(details.release_date?.slice(0, 4), 10);
     return {
         tmdbId: details.id,
@@ -74,8 +87,14 @@ function toMovie(details: TmdbMovieDetails, titleEn: string): TmdbMovie {
         releaseYear: Number.isNaN(year) ? null : year,
         runtimeMinutes: details.runtime || null,
         posterPath: details.poster_path,
-        genres: details.genres.map((genre) => genre.name),
+        genres: details.genres?.map((genre) => genre.name) ?? [],
         rating: details.vote_average ? Math.round(details.vote_average * 10) / 10 : null,
+    };
+}
+
+function toMovie(details: TmdbMovieDetails, titleEn: string): TmdbMovie {
+    return {
+        ...toSummary(details, titleEn),
         directors: [...new Set(details.credits?.crew.filter((person) => person.job === "Director").map((person) => person.name))],
         actors: (details.credits?.cast ?? [])
             .toSorted((a, b) => a.order - b.order)
@@ -95,11 +114,44 @@ export async function getMovie(tmdbId: number): Promise<TmdbMovie> {
     return toMovie(details, english.title);
 }
 
-/** Top search results with full details, so cards can show runtime and IMDb links. */
-export async function searchMovies(query: string, limit = 12): Promise<TmdbMovie[]> {
+type TmdbTranslations = {
+    translations: { translations: { iso_639_1: string; iso_3166_1: string; data: { title: string } }[] };
+};
+
+/** Details without credits, for search result cards; the English title comes from the translations */
+async function getMovieSummary(tmdbId: number): Promise<TmdbMovieSummary> {
     "use cache";
-    cacheLife("hours");
+    cacheLife("days");
+
+    const details = await tmdbFetch<TmdbMovieDetails & TmdbTranslations>(`/movie/${tmdbId}`, { append_to_response: "translations" });
+    const english = details.translations.translations
+        .filter((translation) => translation.iso_639_1 === "en" && translation.data.title)
+        .toSorted((a, b) => Number(b.iso_3166_1 === "US") - Number(a.iso_3166_1 === "US"))[0];
+    return toSummary(details, english?.data.title);
+}
+
+/**
+ * Top search results with runtime and IMDb ids, so cards can show them. A movie whose
+ * details fail to load still shows up, just without runtime, instead of failing the whole search.
+ */
+export async function searchMovies(query: string, limit = 12): Promise<TmdbMovieSummary[]> {
+    "use cache";
 
     const { results } = await tmdbFetch<TmdbSearchResponse>("/search/movie", { query, include_adult: "false" });
-    return Promise.all(results.slice(0, limit).map((result) => getMovie(result.id)));
+    const top = results.slice(0, limit);
+    const summaries = await Promise.allSettled(top.map((result) => getMovieSummary(result.id)));
+
+    // Don't keep a partial answer around for hours
+    if (summaries.every((summary) => summary.status === "fulfilled")) {
+        cacheLife("hours");
+    } else {
+        cacheLife("seconds");
+    }
+
+    return top.map((result, index) => {
+        const summary = summaries[index];
+        if (summary.status === "fulfilled") return summary.value;
+        console.error(summary.reason);
+        return toSummary(result, undefined);
+    });
 }

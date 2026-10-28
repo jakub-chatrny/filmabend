@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { LibraryLink } from "@/components/LibraryLink";
 
 /**
  * "Tag" chips from Figma: selected genres are filled with ×, the rest are outlined links.
@@ -28,7 +28,7 @@ export function GenreChips({ genres }: { genres: string[] }) {
                 const isActive = active.includes(genre);
                 return (
                     <li key={genre}>
-                        <Link
+                        <LibraryLink
                             href={hrefFor(genre)}
                             scroll={false}
                             aria-pressed={isActive}
@@ -38,7 +38,7 @@ export function GenreChips({ genres }: { genres: string[] }) {
                         >
                             {genre}
                             {isActive && <Image src="/icons/close.svg" alt="Odebrat" width={14} height={14} />}
-                        </Link>
+                        </LibraryLink>
                     </li>
                 );
             })}
